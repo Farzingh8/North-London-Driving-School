@@ -47,16 +47,15 @@ returns 401 where the other belongs.
 than rendering a broken page. A failed build leaves the last good deploy live.
 It rejects:
 
-- a Stripe link that is not one of the six verified Payment Links
+- a Stripe link that is not one of the six verified Payment Links, or is one of
+  them but belongs to a different card (packages match by tier, lessons by
+  whether the name mentions seniors)
 - a price that is not digits with optional cents (`$625` and `625,00` fail)
 - an unknown tier, an empty name, or anything other than exactly four packages
 - a rejected token (401) or a missing story (404)
 
 `tests/cms-catalogue.test.ts` covers all of these except the 404, running the
 loader against mocked API responses.
-
-Known limitation, accepted: the Stripe check confirms a link is one of the six,
-not that it belongs to that package. The owner does not edit those fields.
 
 ## Scripts
 

@@ -140,9 +140,3 @@ A Next.js static export writes each route's prefetch data to
 path, and its `_redirects` file ignores status-200 rewrites, so
 `scripts/flatten-rsc-payloads.mjs` copies each file to the requested path. It
 can be deleted once a Next.js release emits the flat path itself.
-
-## Known limitation
-
-The build checks that each package's Stripe link is one of the verified Payment
-Links, not that it is the link for that specific package. Those fields are not
-edited through the CMS.

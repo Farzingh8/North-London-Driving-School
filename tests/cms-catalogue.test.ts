@@ -87,6 +87,40 @@ describe("getCatalogue", () => {
     await expect(buildWith(storyWith(pkgs))).rejects.toThrow(message);
   });
 
+  it("fails the build when a package carries another package's Stripe link", async () => {
+    const diamondLink = localPackages[3].stripeUrl;
+    const pkgs = localPackages.map((p, i) => blok(p, i === 0 ? { stripe_url: diamondLink } : {}));
+    await expect(buildWith(storyWith(pkgs))).rejects.toThrow(/not this card's/);
+  });
+
+  it("fails the build when two packages share a tier", async () => {
+    const pkgs = localPackages.map((p, i) =>
+      blok(p, i === 0 ? { tier: "diamond", stripe_url: localPackages[3].stripeUrl } : {}),
+    );
+    await expect(buildWith(storyWith(pkgs))).rejects.toThrow(/two packages have the tier/);
+  });
+
+  it("fails the build when the two lessons' Stripe links are swapped", async () => {
+    const [standard, seniors] = localLessons;
+    const story = storyWith(localPackages.map((p) => blok(p)));
+    story.story.content.lessons = [
+      blok(standard, { stripe_url: seniors.stripeUrl }),
+      blok(seniors, { stripe_url: standard.stripeUrl }),
+    ];
+    await expect(buildWith(story)).rejects.toThrow(/not this card's/);
+  });
+
+  it("allows a lesson to be renamed", async () => {
+    const [standard, seniors] = localLessons;
+    const story = storyWith(localPackages.map((p) => blok(p)));
+    story.story.content.lessons = [
+      blok(standard, { name: "Two-hour driving lesson" }),
+      blok(seniors, { name: "Seniors refresher, 2 hours" }),
+    ];
+    const catalogue = await buildWith(story);
+    expect(catalogue.lessons.map((l) => l.stripeUrl)).toEqual([standard.stripeUrl, seniors.stripeUrl]);
+  });
+
   it("fails the build when a package is missing", async () => {
     await expect(buildWith(storyWith(localPackages.slice(0, 3).map((p) => blok(p))))).rejects.toThrow(
       /built around 4/,
@@ -96,10 +130,6 @@ describe("getCatalogue", () => {
   it("fails the build when Storyblok rejects the token", async () => {
     await expect(buildWith({}, 401)).rejects.toThrow(/401/);
   });
-
-  // Accepted limitation: the check is "one of the six verified links", not
-  // "this package's link", so Diamond's link on Bronze's card would pass. The
-  // owner does not edit the Stripe fields, so this is not enforced.
 });
 
 describe("toPublicPackage", () => {

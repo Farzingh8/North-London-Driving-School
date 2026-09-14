@@ -27,11 +27,68 @@ import { cms, getStory } from "./client";
  * package arriving from the CMS with any other URL is rejected outright. The
  * failure mode this prevents is quiet and expensive: a mistyped link that still
  * looks like a Stripe URL, on a button, taking money nowhere.
+ *
+ * Being one of the six is not enough, either. Diamond's link pasted into
+ * Bronze's field is a real link, and it would put a $1,129.99 checkout behind a
+ * $599.99 button. So each link must also be the one that belongs to that card:
+ * packages are matched by tier, and the two lessons by whether the name mentions
+ * seniors. See `expectedStripeUrl`.
  */
 
 const ALLOWED_STRIPE_URLS = new Set(
   [...localPackages, ...localLessons].map((p) => p.stripeUrl),
 );
+
+/** Each package's verified link, keyed by its tier. */
+const PACKAGE_LINK_BY_TIER = new Map(localPackages.map((p) => [p.tier, p]));
+
+const isSeniors = (name: string) => /senior/i.test(name);
+const SENIORS_LESSON = localLessons.find((l) => isSeniors(l.name));
+const STANDARD_LESSON = localLessons.find((l) => !isSeniors(l.name));
+
+/**
+ * The verified package or lesson whose Stripe link a CMS entry must carry.
+ *
+ * Packages key on `tier` rather than name: it is a fixed dropdown, each tier
+ * appears once, and the card's colour already follows it, so it is what the
+ * visitor sees. Both lessons share the "plain" tier, so they key on the name,
+ * and only loosely, so rewording a lesson's title does not fail a deploy.
+ */
+function expectedStripeUrl(kind: "package" | "lesson", pkg: PackageBlok) {
+  if (kind === "package") return PACKAGE_LINK_BY_TIER.get(pkg.tier);
+  return isSeniors(pkg.name) ? SENIORS_LESSON : STANDARD_LESSON;
+}
+
+function checkStripeMapping(kind: "package" | "lesson", list: PackageBlok[]) {
+  const tiers = new Set<string>();
+  for (const pkg of list) {
+    if (kind === "package") {
+      if (tiers.has(pkg.tier)) {
+        throw new CmsContentError(
+          pkg.slug,
+          `two packages have the tier "${pkg.tier}". Each tier is used once, and it ` +
+            `decides which Stripe link the card must carry.`,
+        );
+      }
+      tiers.add(pkg.tier);
+    }
+    const expected = expectedStripeUrl(kind, pkg);
+    if (!expected) {
+      throw new CmsContentError(
+        pkg.slug,
+        `no verified Stripe link belongs to a ${kind} with tier "${pkg.tier}".`,
+      );
+    }
+    if (pkg.stripeUrl !== expected.stripeUrl) {
+      throw new CmsContentError(
+        pkg.slug,
+        `"stripe_url" is a verified link, but not this card's: the ${kind} ` +
+          `"${pkg.name}" must use ${expected.stripeUrl} (the ${expected.name} ` +
+          `Payment Link). Restore it from content/packages.ts.`,
+      );
+    }
+  }
+}
 
 const TIERS = new Set(["bronze", "silver", "gold", "diamond", "plain"]);
 
@@ -289,6 +346,8 @@ async function load(): Promise<Catalogue> {
   const lessons = asList(content.lessons).map((c, i) =>
     toPackage(slugFor(c, i), story.id, c),
   );
+  checkStripeMapping("package", packages);
+  checkStripeMapping("lesson", lessons);
   if (packages.length !== localPackages.length) {
     throw new CmsContentError(
       "packages/",
