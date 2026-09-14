@@ -1,23 +1,25 @@
 /**
  * Storyblok Content Delivery API, over plain `fetch`.
  *
- * WHY NO SDK. `@storyblok/react` exists and is the documented route, but this
- * project has no dependencies beyond `create-next-app` and that is worth
- * keeping: it is why the bundle is what it is, and why `npm audit` is quiet.
- * The Delivery API is a REST endpoint returning JSON, every fetch here happens
- * at BUILD time under `output: "export"`, and nothing of the SDK survives into
- * the browser anyway. The one thing the SDK genuinely adds is the visual-editor
- * bridge, which is a script tag on a preview route and can be added later
- * without taking the library.
+ * WHY NO SDK. `@storyblok/react` exists and is the documented route, but the
+ * site's runtime dependencies are only Next.js and React, and that is worth
+ * keeping. The Delivery API is a REST endpoint returning JSON, every fetch here
+ * happens at BUILD time under `output: "export"`, and nothing of the SDK would
+ * survive into the browser anyway. The one thing the SDK genuinely adds is the
+ * visual-editor bridge, which components/storyblok-bridge.ts loads as a script
+ * tag inside the editor only.
  *
  * WHAT HAPPENS WITH NO TOKEN. Everything falls back to the TypeScript content
- * in `content/*.ts`. That is the current behaviour and the current build, so
- * this integration changes nothing until `STORYBLOK_TOKEN` is set. It is also
- * the safety net: if the space is ever deleted or the token rotated, the site
- * still builds and still says the right thing.
+ * in `content/*.ts`, and next.config.ts says so in the build log. That is how
+ * local development and CI build.
+ *
+ * WHAT HAPPENS WITH A BAD TOKEN. A token that is set but rejected (rotated,
+ * revoked, or for another space) gets a 401, and the build FAILS rather than
+ * falling back. The previous deploy stays live until the token is fixed, which
+ * is deliberate: silently shipping the local content would publish stale prices.
  *
  * ENV
- *   STORYBLOK_TOKEN    Preview or public access token. Absent = use local content.
+ *   STORYBLOK_TOKEN    Delivery (public or preview) access token. Absent = use local content.
  *   STORYBLOK_API      Optional. Regional base, e.g. https://api-us.storyblok.com
  *                      Spaces created in the US or AU region will not answer on
  *                      the default host, and the failure looks like an empty space.
