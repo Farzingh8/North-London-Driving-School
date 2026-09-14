@@ -1,0 +1,158 @@
+{
+  "_comment": "Import into Storyblok: Block Library > New Block, or via the Management API. Field names here must match content/cms/packages.ts exactly; that mapper is the contract. Storyblok's free plan has no read-only fields, so the guardrails on stripe_url are a description plus a build-time whitelist, not a permission.",
+  "components": [
+    {
+      "name": "packages_page",
+      "display_name": "Packages page",
+      "is_root": true,
+      "is_nestable": false,
+      "schema": {
+        "packages": {
+          "type": "bloks",
+          "pos": 0,
+          "required": true,
+          "display_name": "Packages",
+          "restrict_components": true,
+          "component_whitelist": [
+            "package"
+          ],
+          "maximum": 4,
+          "minimum": 4,
+          "description": "The four certification packages, in the order bronze, silver, gold, diamond. The site renders them by tier, so dragging them will not reorder the cards. Adding or removing one fails the deploy: the cards are a four-across comparison, which is a layout change rather than a content edit."
+        },
+        "lessons": {
+          "type": "bloks",
+          "pos": 1,
+          "display_name": "Individual lessons",
+          "restrict_components": true,
+          "component_whitelist": [
+            "package"
+          ],
+          "description": "The standalone lessons shown under the packages. Same fields; tier should be 'plain'."
+        }
+      }
+    },
+    {
+      "name": "package",
+      "display_name": "Package",
+      "is_root": false,
+      "is_nestable": true,
+      "schema": {
+        "name": {
+          "type": "text",
+          "pos": 0,
+          "required": true,
+          "display_name": "Package name",
+          "description": "Shown on the card header and the Purchase button. Bronze, Silver, Gold, Diamond."
+        },
+        "price": {
+          "type": "text",
+          "pos": 1,
+          "required": true,
+          "display_name": "Price before HST",
+          "description": "Digits only, no dollar sign, no comma. Example: 599.99. IMPORTANT: changing this here does NOT change what Stripe charges. Stripe holds its own price and must be updated separately, or the site will advertise one number and collect another."
+        },
+        "tax_note": {
+          "type": "text",
+          "pos": 2,
+          "default_value": "plus HST",
+          "display_name": "Tax note",
+          "description": "The small line under the price."
+        },
+        "in_car_hours": {
+          "type": "number",
+          "pos": 3,
+          "required": true,
+          "display_name": "In-car hours"
+        },
+        "online_hours": {
+          "type": "number",
+          "pos": 4,
+          "required": true,
+          "default_value": "30",
+          "display_name": "Online coursework hours"
+        },
+        "highlights": {
+          "type": "textarea",
+          "pos": 5,
+          "display_name": "Extra card lines",
+          "description": "Optional, one per line, and usually EMPTY. The card already writes its own lines from the fields on this form: in-car hours, online hours, pick-up for every lesson, test-day pick-up (from the toggle) and the MTO certificate. Do not type those here; change the fields instead, and the card, the comparison table and every page quoting them update together. Anything written here is added to the card after the standard lines. Individual lessons ignore this field."
+        },
+        "inclusions": {
+          "type": "textarea",
+          "pos": 6,
+          "display_name": "Lesson card lines",
+          "description": "Individual lessons only, one per line. The card already writes its first line from In-car hours, so do not repeat the hours here; add only what else the lesson includes. NOT SHOWN for the four packages: anything written here on Bronze, Silver, Gold or Diamond appears nowhere on the site. Use Extra card lines for those."
+        },
+        "tier": {
+          "type": "option",
+          "pos": 7,
+          "required": true,
+          "default_value": "plain",
+          "display_name": "Card styling",
+          "description": "Drives the metallic header and the car photograph behind the card.",
+          "options": [
+            {
+              "name": "Bronze",
+              "value": "bronze"
+            },
+            {
+              "name": "Silver",
+              "value": "silver"
+            },
+            {
+              "name": "Gold",
+              "value": "gold"
+            },
+            {
+              "name": "Diamond",
+              "value": "diamond"
+            },
+            {
+              "name": "Plain (individual lessons)",
+              "value": "plain"
+            }
+          ]
+        },
+        "test_day_pickup": {
+          "type": "boolean",
+          "pos": 8,
+          "display_name": "Includes pick-up on road test day",
+          "description": "Separate from the pick-up every package gets for ordinary lessons."
+        },
+        "badge": {
+          "type": "text",
+          "pos": 9,
+          "display_name": "Badge",
+          "description": "Optional. Short label above the price, e.g. \"Most in-car time\"."
+        },
+        "featured": {
+          "type": "boolean",
+          "pos": 10,
+          "display_name": "Featured card",
+          "description": "Gives the card the raised outline. Only one package should have this."
+        },
+        "note": {
+          "type": "text",
+          "pos": 11,
+          "display_name": "Internal note",
+          "description": "Not shown on the site."
+        },
+        "stripe_url": {
+          "type": "text",
+          "pos": 12,
+          "required": true,
+          "display_name": "Stripe Payment Link — DO NOT EDIT",
+          "description": "This is where customers' money goes. It is checked against a whitelist at build time: any value other than the verified Payment Link will FAIL THE DEPLOY, and the live site will keep its previous content until it is put back. If a link genuinely needs to change, it has to change in the code as well."
+        }
+      }
+    }
+  ],
+  "_story": {
+    "_comment": "ONE story, not a folder of them. `package` is nestable and lives inside the `packages_page` content type, because Storyblok's visual editor can only select a blok within the story it has open — a blok's _uid is unique per story, and there is no mechanism for a click to switch stories. Four separate package stories made click-to-select impossible.",
+    "slug": "packages-page",
+    "name": "Packages",
+    "real_path": "/packages",
+    "content_type": "packages_page"
+  }
+}

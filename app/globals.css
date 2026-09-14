@@ -1,0 +1,2167 @@
+/* ==========================================================================
+   North London Driving School
+   One stylesheet. No framework, no reset library, no utility classes.
+
+   The design grammar is a printed course prospectus: left-aligned, ruled,
+   rectangular, set in full-width bands. Facts are labelled rows, not tiles.
+   There are no icons and no motion anywhere. Gradients and shadows appear in
+   exactly one place — the four package cards, where they carry the tier
+   hierarchy — and nowhere else. Every colour pairing below has been measured
+   against WCAG 2.1.
+   ========================================================================== */
+
+:root {
+  /* --- palette -----------------------------------------------------------
+     green   on paper  11.95:1     ink    on paper  15.66:1
+     white   on green  12.73:1     slate  on paper   7.30:1
+     ink     on pale   14.02:1     ink    on amber   9.05:1
+     amber   on green   6.90:1     border on paper   3.35:1  (WCAG 1.4.11)
+     ---------------------------------------------------------------------- */
+  --green: #14392b;    /* primary: headings, buttons, hero band, CTA band    */
+  --green-dark: #0f2c21;
+  --ink: #17201b;      /* body text, footer ground                          */
+  --paper: #f7f8f6;    /* page ground: off-white, chosen to cut glare       */
+  --slate: #4a554e;    /* secondary text only, never below 16px             */
+  --pale: #e7ede6;     /* alternating bands, table heads, quotation grounds */
+  --amber: #f4b41a;    /* markers: section rules, badges, panel underlines  */
+
+  --border: #788d79;   /* boundaries that carry meaning                     */
+  --hairline: #c9d4c8; /* separators inside an already-bounded region       */
+  --white: #ffffff;
+
+  --wrap: 1140px;
+  --measure: 66ch;
+  --radius: 2px;
+
+  --gap: 1.5rem;
+  --band-y: clamp(2.75rem, 6vw, 4.5rem);
+
+  --bar-h: 3.5rem; /* mobile contact bar */
+
+  color-scheme: light;
+}
+
+/* --- reset ------------------------------------------------------------- */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+/* `scroll-behavior: smooth` is deliberately absent, and must stay absent.
+   It broke navigation in two directions at once. The App Router scrolls a new
+   page to the top with `documentElement.scrollTop = 0`; under smooth scrolling
+   that became an animation the router's very next measurement cancelled, so
+   every page opened at whatever offset the previous one had been scrolled to.
+   On a phone that means landing on the footer of a page you have never seen.
+   Setting `data-scroll-behavior="smooth"` on <html> makes the router disable
+   smoothness for its own scroll and fixes that, but then breaks the back
+   button, which stops restoring the position you left. Measured on /packages,
+   leaving at offset 4000:
+
+     smooth + no attribute   forward 5227  back 4000
+     smooth + attribute      forward    0  back    0
+     no smooth               forward    0  back 4000   <- both correct
+
+   The only in-page anchor on the whole site is the skip link, where an instant
+   jump is what a keyboard user wants anyway, so nothing is lost. */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 1.125rem;          /* 18px floor, for readers over 65 */
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  /* Reserve the mobile contact bar so it never overlaps the footer.
+     A static value, so it cannot cause a shift. */
+  padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px));
+}
+
+img, svg { display: block; max-width: 100%; height: auto; }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.017em;
+  margin: 0 0 0.55em;
+  color: var(--green);
+  text-wrap: balance;
+}
+
+h1 { font-size: clamp(2rem, 1.45rem + 2.4vw, 3.05rem); }
+h2 { font-size: clamp(1.55rem, 1.32rem + 1.05vw, 2.1rem); }
+h3 { font-size: clamp(1.15rem, 1.09rem + 0.28vw, 1.3rem); letter-spacing: -0.008em; }
+h4 { font-size: 1.0625rem; letter-spacing: 0; }
+
+p { margin: 0 0 1.1em; text-wrap: pretty; }
+p:last-child { margin-bottom: 0; }
+
+ul, ol { margin: 0 0 1.1em; padding-left: 1.15em; }
+li { margin-bottom: 0.35em; }
+
+a { color: var(--green); text-underline-offset: 0.18em; }
+a:hover { text-decoration-thickness: 2px; }
+
+strong { font-weight: 700; }
+blockquote { margin: 0; }
+cite { font-style: normal; }
+
+/* Focus is never removed and never subtle: ink on light grounds, amber on the
+   dark bands, both far above 3:1 against their surroundings. */
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+.on-dark :focus-visible { outline-color: var(--amber); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* No `scroll-behavior` override needed: it is never smooth. See the note on
+     the `html` rule above. */
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* --- layout ------------------------------------------------------------ */
+
+.wrap {
+  width: 100%;
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+.measure { max-width: var(--measure); }
+
+.band { padding-block: var(--band-y); background: var(--band-bg, transparent); }
+.band--pale { background: var(--pale); border-block: 1px solid var(--hairline); }
+.band--green { background: var(--green); color: var(--white); }
+.band--ink { background: var(--ink); color: var(--white); }
+
+.band--green h1, .band--green h2, .band--green h3,
+.band--ink h2, .band--ink h3 { color: var(--white); }
+/* `:not(.btn)` rather than a specificity bump: buttons on a dark band carry
+   their own inverted colours and must not be repainted white by the band. */
+.band--green a:not(.btn), .band--ink a:not(.btn) { color: var(--white); }
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  background: var(--green);
+  color: var(--white);
+  padding: 0.9rem 1.25rem;
+  font-weight: 700;
+}
+.skip:focus { left: 0; }
+
+/* --- section furniture ------------------------------------------------- */
+
+/* The amber rule is the only ornament in the system. It marks where a section
+   begins, standing in for the icon that would otherwise go there. */
+.rule {
+  width: 3rem;
+  height: 5px;
+  background: var(--amber);
+  margin: 0 0 1.1rem;
+  border: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin: 0 0 0.45rem;
+}
+.band--green .eyebrow, .band--ink .eyebrow { color: var(--pale); }
+
+.section-head { max-width: var(--measure); margin-bottom: 2.25rem; }
+.section-head > p { color: var(--slate); }
+.band--green .section-head > p { color: var(--pale); }
+
+.lede {
+  font-size: clamp(1.1875rem, 1.13rem + 0.3vw, 1.375rem);
+  line-height: 1.5;
+  max-width: 58ch;
+}
+
+/* --- buttons ----------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;              /* 48px target */
+  padding: 0.7rem 1.4rem;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.12s linear, color 0.12s linear;
+}
+
+.btn--primary { background: var(--green); color: var(--white); border-color: var(--green); }
+.btn--primary:hover { background: var(--green-dark); border-color: var(--green-dark); color: var(--white); }
+
+.btn--secondary { background: transparent; color: var(--green); border-color: var(--green); }
+.btn--secondary:hover { background: var(--green); color: var(--white); }
+.btn--icon { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.btn--icon .icon { width: 1.25rem; height: 1.25rem; flex: none; }
+
+/* On the green bands the action colour inverts: paper becomes the loud one. */
+.btn--onDark { background: var(--paper); color: var(--green); border-color: var(--paper); }
+.btn--onDark:hover { background: var(--white); color: var(--green-dark); }
+
+.btn--onDarkGhost { background: transparent; color: var(--white); border-color: var(--paper); }
+.btn--onDarkGhost:hover { background: rgba(255, 255, 255, 0.14); color: var(--white); }
+
+.btn--block { display: flex; width: 100%; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
+
+/* Full-width targets on a phone. A 48px-tall button that only spans half the
+   screen is still a small target for an unsteady hand. */
+@media (max-width: 39.99rem) {
+  .actions { display: grid; }
+  .actions .btn { width: 100%; }
+}
+
+/* --- masthead ---------------------------------------------------------- */
+
+.utility {
+  background: var(--ink);
+  color: var(--pale);
+  font-size: 1rem;
+  padding-block: 0.5rem;
+}
+.utility .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.75rem;
+  justify-content: space-between;
+}
+.utility a { color: var(--white); font-weight: 700; }
+
+/* The WhatsApp icon at the end of the top bar. The hit area is padded to 32px
+   so a 20px glyph is still an easy target on a phone. */
+.utility__whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.35rem -0.35rem -0.35rem 0.5rem;
+  vertical-align: middle;
+  border-radius: 50%;
+}
+.utility__whatsapp .icon { width: 1.25rem; height: 1.25rem; }
+.utility__whatsapp:hover { color: var(--amber); }
+
+/* On a phone the utility bar was costing three lines above the fold to repeat
+   what the fixed bar and the H1 already say. Only the opening hours survive —
+   they are the single most valuable correction on the site, since the live
+   version still claims the school is closed at weekends. */
+.utility__note, .utility__call { display: none; }
+@media (min-width: 62rem) {
+  .utility__note, .utility__call { display: inline; }
+}
+
+.masthead {
+  background: var(--paper);
+  border-bottom: 3px solid var(--green);
+  position: relative;
+}
+.masthead__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.85rem;
+}
+
+/* The school's own logo is drawn white-on-transparent with a yellow car, so it
+   sits in a green block rather than directly on the light header. That is also
+   how the existing favicon presents it: the mark inside a coloured square. */
+.brand {
+  display: block;
+  flex: none;
+  background: var(--green);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.85rem;
+  line-height: 0;
+}
+.brand img {
+  width: 132px;
+  height: auto;
+  aspect-ratio: 384 / 128;    /* reserves the box before the file arrives */
+}
+@media (min-width: 62rem) {
+  .brand { padding: 0.55rem 1rem; }
+  .brand img { width: 168px; }
+}
+
+/* Desktop navigation. display:none below the breakpoint takes it out of the
+   accessibility tree, so exactly one nav is ever exposed. */
+.nav { display: none; }
+
+@media (min-width: 62rem) {
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .nav a {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-size: 0.97rem;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 0.7rem 0.6rem;
+    border-radius: var(--radius);
+    border-bottom: 3px solid transparent;
+  }
+  .nav a:hover { color: var(--green); border-bottom-color: var(--border); }
+  .nav a[aria-current="page"] { color: var(--green); border-bottom-color: var(--amber); }
+  .navmob { display: none; }
+}
+
+/* Both bars stick as one block on every screen. SiteHeader slides it out of
+   view while the reader scrolls down and back in on the first scroll up. */
+.topstack {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  transition: transform 0.25s ease;
+}
+.topstack[data-hidden] { transform: translateY(-100%); }
+@media (prefers-reduced-motion: reduce) {
+  .topstack { transition: none; }
+}
+
+/* The brand takes the spare width, so the login button, the desktop nav and
+   the mobile menu button all pack to the right. */
+.masthead__inner { justify-content: flex-start; gap: 0.5rem; }
+.brand { margin-right: auto; }
+
+.login {
+  flex: none;
+  min-height: 3rem;
+  padding: 0.55rem 0.7rem;
+  white-space: nowrap;
+}
+.navmob__summary { padding-inline: 0.8rem; }
+/* Logo, login and menu on one line at 360px wide. */
+@media (max-width: 23.99rem) {
+  .brand { padding-inline: 0.6rem; }
+  .brand img { width: 112px; }
+}
+.login__long { display: none; }
+@media (min-width: 30rem) {
+  .masthead__inner { gap: 1rem; }
+  .login__long { display: inline; }
+  .login__short { display: none; }
+}
+.utility__login { display: none; }
+@media (min-width: 62rem) {
+  .login { display: none; }
+  .utility__login {
+    display: inline-block;
+    margin-left: 1rem;
+    padding: 0.1rem 0.75rem;
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    line-height: 1.5;
+    text-decoration: none;
+  }
+  .utility__login:hover { background: var(--amber); color: var(--ink); }
+}
+
+/* Mobile navigation: a native details disclosure. Works with JavaScript
+   disabled, needs no hydration, cannot flash open, cannot shift layout. */
+.navmob { position: relative; }
+.navmob__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.55rem 1rem;
+  background: var(--green);
+  color: var(--white);
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.navmob__summary::-webkit-details-marker { display: none; }
+.navmob__bars { display: grid; gap: 3px; width: 1.1rem; }
+.navmob__bars span { display: block; height: 2px; background: currentColor; }
+.navmob__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.85rem);
+  z-index: 95;
+  width: min(19rem, calc(100vw - 2rem));
+  background: var(--paper);
+  border: 2px solid var(--green);
+  border-radius: var(--radius);
+  padding: 0.35rem;
+  box-shadow: 0 14px 30px rgba(23, 32, 27, 0.22);
+}
+.navmob__panel a {
+  display: block;
+  padding: 0.85rem 0.9rem;      /* 56px rows */
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hairline);
+}
+.navmob__panel a:last-child { border-bottom: 0; }
+.navmob__panel a:hover { background: var(--pale); color: var(--green); }
+.navmob__panel a[aria-current="page"] {
+  color: var(--green);
+  box-shadow: inset 4px 0 0 var(--amber);
+}
+
+/* --- hero -------------------------------------------------------------- */
+
+.hero { padding-block: clamp(2.5rem, 5.5vw, 4rem); }
+.hero .lede { color: var(--pale); }
+
+/* The header now carries a logo rather than the school's name in type, so the
+   name is stated once, large, in the first thing anyone sees. It is the biggest
+   text on the page; the H1 beneath it carries the search terms. */
+.hero__brand {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: clamp(2.05rem, 1.4rem + 2.9vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--white);
+  margin: 0 0 0.5rem;
+  max-width: 14ch;
+  text-wrap: balance;
+}
+.hero h1 {
+  font-size: clamp(1.35rem, 1.15rem + 0.9vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--amber);   /* 6.90:1 on the green band, and ties the logo's yellow in */
+  max-width: 26ch;
+  margin-bottom: 0.9rem;
+}
+
+.hero__grid { display: grid; gap: clamp(2rem, 4vw, 3rem); align-items: start; }
+@media (min-width: 62rem) {
+  .hero__grid { grid-template-columns: 1.15fr 0.85fr; gap: 3.5rem; }
+}
+
+/* The only panel on the page. Paper on green, so it reads as an inset from a
+   printed page rather than a translucent overlay. */
+.panel {
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.panel__head {
+  background: var(--green-dark);
+  color: var(--white);
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.0625rem;
+  letter-spacing: 0.02em;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 4px solid var(--amber);
+  margin: 0;
+}
+.panel dl { margin: 0; padding: 0.35rem 1.25rem 1.15rem; }
+.panel dl > div { padding-block: 0.8rem; border-bottom: 1px solid var(--hairline); }
+.panel dl > div:last-child { border-bottom: 0; }
+.panel dt {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--slate);
+  letter-spacing: 0.02em;
+}
+.panel dd {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--green);
+  line-height: 1.25;
+}
+
+/* --- fact row ---------------------------------------------------------- */
+
+.facts {
+  display: grid;
+  gap: 1px;
+  background: var(--hairline);
+  border-block: 1px solid var(--hairline);
+  margin: 0;
+}
+.facts > div { background: var(--pale); padding: 1.15rem clamp(1rem, 4vw, 2rem); }
+.facts dt {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--green);
+  line-height: 1.1;
+}
+.facts dd { margin: 0.3rem 0 0; font-size: 1rem; color: var(--slate); line-height: 1.4; }
+@media (min-width: 40rem) { .facts { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 62rem) { .facts { grid-template-columns: repeat(4, 1fr); } }
+
+/* --- blocks and grids -------------------------------------------------- */
+
+.cols { display: grid; gap: var(--gap); }
+@media (min-width: 46rem) {
+  .cols--2 { grid-template-columns: repeat(2, 1fr); }
+  .cols--3 { grid-template-columns: repeat(2, 1fr); }
+  .cols--4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 68rem) {
+  .cols--3 { grid-template-columns: repeat(3, 1fr); }
+  .cols--4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+.split { display: grid; gap: clamp(2rem, 4vw, 3rem); align-items: start; }
+@media (min-width: 62rem) { .split { grid-template-columns: 1.15fr 0.85fr; } }
+
+.block {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+.block h3 { margin-bottom: 0.5rem; }
+.block p { color: var(--slate); }
+
+/* --- package cards ----------------------------------------------------- */
+
+.pkg {
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+/* An inset shadow rather than a thicker border: a 2px border would make this
+   card 2px shorter in content box than its neighbours and knock its price and
+   button a pixel out of line with theirs. */
+/* Emphasis for the featured card comes from its tier treatment below. */
+.pkg--featured { border-width: 1px; }
+
+.pkg__head {
+  background: var(--green);
+  color: var(--white);
+  padding: 0.8rem 1.15rem;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.28);
+}
+.pkg__head h3 { color: inherit; margin: 0; font-size: 1.25rem; }
+
+/* --- tier treatments ----------------------------------------------------
+   Each package wears its metal across the whole card: the header at full
+   strength, the body as a light wash of the same hue. Bronze and Silver stay
+   deliberately flat; Gold and Diamond get a specular highlight, an inner bevel
+   and a soft drop shadow, so the hierarchy is visible before a price is read.
+
+   All CSS gradients, so this costs no image bytes and nothing to download, and
+   there is no motion anywhere in it. Body text sits at 14.7:1 or better on
+   every wash; the worst header pairing of the sixteen is 5.13:1.
+   ---------------------------------------------------------------------- */
+
+/* Bronze — matte, the entry tier. */
+.pkg--bronze { border-color: #a2743f; background: linear-gradient(180deg, #f7f0e8 0%, #fdfbf8 62%); }
+.pkg--bronze .pkg__head {
+  background: linear-gradient(135deg, #5e3616 0%, #87552b 46%, #6b3f1b 100%);
+  color: var(--white);
+}
+.pkg--bronze .pkg__list li { border-top-color: #e6d5c3; }
+
+/* Silver — brushed, still restrained. */
+.pkg--silver { border-color: #767f89; background: linear-gradient(180deg, #f1f3f6 0%, #fcfdfe 62%); }
+.pkg--silver .pkg__head {
+  background: linear-gradient(135deg, #a8b0b8 0%, #eef1f4 44%, #c4cbd2 62%, #a8b0b8 100%);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -1px 0 rgba(0, 0, 0, 0.16);
+}
+.pkg--silver .pkg__list li { border-top-color: #dde2e8; }
+
+/* Gold — polished, with a specular band raked across the header. */
+.pkg--gold {
+  border-color: #96761a;
+  background: linear-gradient(180deg, #fdf6e2 0%, #fffdf6 62%);
+  box-shadow: 0 2px 10px rgba(150, 118, 26, 0.18);
+}
+.pkg--gold .pkg__head {
+  background:
+    linear-gradient(104deg, transparent 32%, rgba(255, 255, 255, 0.62) 43%,
+                    rgba(255, 255, 255, 0.12) 51%, transparent 59%),
+    linear-gradient(135deg, #b8860b 0%, #e8c14e 24%, #f7e9a8 45%, #caa128 68%, #b8860b 100%);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(0, 0, 0, 0.24);
+}
+.pkg--gold .pkg__list li { border-top-color: #efe1b8; }
+
+/* Diamond — deepest ground, cut facets, four still highlights, no animation. */
+.pkg--diamond {
+  border-color: #5b83ac;
+  background: linear-gradient(180deg, #eef3fb 0%, #fbfcfe 62%);
+  box-shadow: 0 3px 14px rgba(43, 74, 110, 0.26);
+}
+.pkg--diamond .pkg__head {
+  background:
+    radial-gradient(circle at 21% 30%, rgba(255, 255, 255, 0.95) 0 1.1px, transparent 1.8px),
+    radial-gradient(circle at 62% 21%, rgba(255, 255, 255, 0.8) 0 1.5px, transparent 2.2px),
+    radial-gradient(circle at 82% 66%, rgba(255, 255, 255, 0.9) 0 1.1px, transparent 1.8px),
+    radial-gradient(circle at 40% 74%, rgba(255, 255, 255, 0.7) 0 1.3px, transparent 2px),
+    linear-gradient(114deg, transparent 28%, rgba(255, 255, 255, 0.26) 39%, transparent 47%),
+    linear-gradient(64deg, transparent 58%, rgba(255, 255, 255, 0.14) 66%, transparent 72%),
+    linear-gradient(158deg, #091b30 0%, #1b3f6b 32%, #2d5f96 52%, #14314f 74%, #0b2440 100%);
+  color: var(--white);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+.pkg--diamond .pkg__list li { border-top-color: #d8e3f1; }
+
+/* The featured card is Diamond; its emphasis comes from the tier, so the
+   generic green ring is not applied on top of it. */
+.pkg--diamond.pkg--featured { box-shadow: 0 3px 14px rgba(43, 74, 110, 0.26), inset 0 0 0 1px #5b83ac; }
+
+/* Windows high-contrast mode flattens every gradient, so the tiers need a
+   structural edge to stay distinguishable. */
+@media (forced-colors: active) {
+  .pkg__head { border-bottom: 3px solid; }
+  .pkg { border-width: 2px; }
+}
+
+/* The badge sits on its own reserved row above the price, and the row is
+   rendered on every card whether or not it carries a badge. Keeping it out of
+   the green head is what holds the four prices on one line: a badge inside the
+   head wraps it to two lines and drops that card's price below its neighbours,
+   which defeats the point of a comparison. */
+.pkg__flag { margin: 0; line-height: 1.6rem; }
+.pkg__flag:not(:empty) { margin-bottom: 0.5rem; }
+/* The row is only reserved once cards sit side by side and their prices have
+   something to line up with. Stacked on a phone it would just be a gap. */
+@media (min-width: 46rem) {
+  .pkg__flag { min-height: 1.6rem; margin-bottom: 0.5rem; }
+}
+
+.badge {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--amber);
+  color: var(--ink);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+
+.pkg__body { padding: 1.15rem; display: flex; flex-direction: column; flex: 1; }
+
+.pkg__price {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 2.15rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.pkg__tax { font-size: 1rem; color: var(--slate); margin: 0.35rem 0 0; }
+
+.pkg__list { list-style: none; margin: 1.1rem 0 1.5rem; padding: 0; font-size: 1.0625rem; }
+.pkg__list li {
+  margin: 0;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink);
+  line-height: 1.45;
+}
+.pkg__cta { margin-top: auto; }
+
+.microcopy { font-size: 1rem; color: var(--slate); margin: 1.25rem 0 0; }
+.band--green .microcopy { color: var(--pale); }
+
+/* --- quotation --------------------------------------------------------- */
+
+/* Ray's own sentences: marked as quotation, set in the heading face, kept in
+   first person while everything around them narrates in third. */
+.quote {
+  background: var(--pale);
+  border-top: 5px solid var(--amber);
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+.quote p {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: clamp(1.2rem, 1.1rem + 0.5vw, 1.45rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--green);
+  margin-bottom: 0.9rem;
+}
+.quote cite { display: block; font-size: 1rem; font-weight: 700; color: var(--ink); }
+.quote cite span { display: block; font-weight: 400; color: var(--slate); }
+
+/* --- reviews ----------------------------------------------------------- */
+
+/* A horizontal rail rather than a grid, so nine reviews cost one screen of
+   height instead of three. Focusable, because a scroll container that can only
+   be reached with a mouse is not reachable at all for some people. */
+.reviews {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(min(82%, 17rem), 22rem);
+  gap: var(--gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding: 4px 4px 1rem;
+  scrollbar-color: var(--border) transparent;
+}
+.review { scroll-snap-align: start; }
+
+.review {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+.review__stars { color: #8a6100; letter-spacing: 0.14em; font-size: 1.15rem; margin: 0 0 0.6rem; }
+.review p { font-size: 1.0625rem; }
+.review cite { margin-top: auto; font-weight: 700; font-size: 1rem; }
+a.review { text-decoration: none; color: inherit; }
+a.review:hover { border-color: var(--green); background: var(--white); }
+.review__link { font-size: 1rem; color: var(--green); text-decoration: underline; margin-top: 0.6rem; }
+.review cite span { font-weight: 400; color: var(--slate); }
+
+/* --- areas ------------------------------------------------------------- */
+
+.areas { list-style: none; margin: 0 0 1.5rem; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.areas li {
+  margin: 0;
+  background: var(--pale);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.8rem;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--green);
+}
+
+/* --- footer ------------------------------------------------------------ */
+
+.footer { background: var(--ink); color: var(--pale); padding-block: 3rem 1.5rem; font-size: 1.0625rem; }
+.footer h2 {
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--white);
+  margin-bottom: 0.9rem;
+}
+.footer a { color: var(--pale); }
+.footer a:hover { color: var(--white); }
+.footer ul { list-style: none; margin: 0; padding: 0; }
+.footer li { margin-bottom: 0.55rem; }
+
+/* A footer column is a list of navigation targets, not prose, so it does not
+   get the inline-link exemption from the minimum target size. On a phone each
+   row is padded out to a comfortable 44px. */
+@media (max-width: 61.99rem) {
+  .footer li { margin-bottom: 0.15rem; }
+  .footer li a { display: inline-block; padding-block: 0.6rem; }
+}
+.footer__grid { display: grid; gap: 2.25rem; }
+
+/* WhatsApp and Instagram, icon beside the name. */
+.footer__social li { margin-bottom: 0.4rem; }
+.footer__social a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.75rem;
+}
+.footer__social .icon { width: 1.25rem; height: 1.25rem; flex: none; }
+@media (min-width: 46rem) { .footer__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 68rem) { .footer__grid { grid-template-columns: 1.4fr 1fr 1fr 1.1fr; } }
+.footer__bottom {
+  border-top: 1px solid #3a453e;
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  justify-content: space-between;
+  font-size: 1rem;
+  color: #b9c9b7;
+}
+
+/* --- mobile contact bar ------------------------------------------------ */
+
+/* Fixed, so it never participates in layout and never shifts anything.
+   Two targets, because the current site says a call is preferred but plenty
+   of sixteen-year-olds will not make one. */
+.contactbar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  background: var(--green);
+  border-top: 3px solid var(--amber);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.contactbar a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--bar-h);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.0625rem;
+  color: var(--white);
+  text-decoration: none;
+}
+.contactbar a + a { border-left: 1px solid rgba(255, 255, 255, 0.35); }
+.contactbar a:active { background: var(--green-dark); }
+
+@media (min-width: 62rem) {
+  .contactbar { display: none; }
+  body { padding-bottom: 0; }
+}
+
+/* --- what we offer ------------------------------------------------------
+   Radio inputs plus sibling selectors. No JavaScript, no hydration shift, and
+   arrow-key navigation comes free with the radio group.
+   ---------------------------------------------------------------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.offer {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+/* Two columns without wrapper elements, so inputs, labels and panels can all
+   remain siblings. Labels auto-flow down column one; every panel is placed in
+   the same cell in column two, and only the selected one is displayed. */
+@media (min-width: 62rem) {
+  .offer {
+    grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr);
+    column-gap: 2rem;
+    align-items: start;
+  }
+  .offer__panel { grid-column: 2; grid-row: 1 / span 8; min-height: 20rem; }
+}
+
+/* The label is the hit target; the span inside it is the painted box. */
+.offer__tab { display: block; margin: 0; cursor: pointer; }
+.offer__tab span {
+  display: block;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 0.9rem;       /* ~48px rows */
+  /* No transition: the selected state should read instantly, not fade in. */
+}
+.offer__tab:hover span { background: var(--pale); color: var(--green); }
+
+.offer__panel {
+  display: none;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-top: 5px solid var(--amber);
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 3vw, 1.9rem);
+}
+.offer__panel h3 { margin-bottom: 0.6rem; }
+.offer__panel p { color: var(--ink); }
+/* The phrase that carries the point. Green on paper is 11.95:1. */
+.offer__panel strong { color: var(--green); font-weight: 700; }
+.offer__panel p:last-child { margin-bottom: 0; }
+
+/* The selected tab, through the adjacent sibling combinator. */
+.offer__input:checked + .offer__tab span {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--white);
+  box-shadow: inset 5px 0 0 var(--amber);
+}
+.offer__input:focus-visible + .offer__tab span {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* The selected panel. Eight explicit rules rather than :has(), so a browser
+   that does not understand the selector shows every panel rather than none. */
+#offer-0:checked ~ [data-offer="0"],
+#offer-1:checked ~ [data-offer="1"],
+#offer-2:checked ~ [data-offer="2"],
+#offer-3:checked ~ [data-offer="3"],
+#offer-4:checked ~ [data-offer="4"],
+#offer-5:checked ~ [data-offer="5"],
+#offer-6:checked ~ [data-offer="6"],
+#offer-7:checked ~ [data-offer="7"] { display: block; }
+
+/* --- editorial markers, removed before launch --------------------------- */
+
+.flagbox {
+  background: #fdf6e3;
+  border: 1px solid var(--amber);
+  border-left: 6px solid var(--amber);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  font-size: 1rem;
+  color: #4a3a05;
+  margin: 0 0 1.5rem;
+}
+.flagbox b {
+  display: block;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.875rem;
+  margin-bottom: 0.2rem;
+}
+.flagbox p { margin: 0; }
+
+.photoslot {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+  gap: 0.3rem;
+  min-height: 18rem;
+  padding: 1.25rem;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: repeating-linear-gradient(
+    45deg, var(--pale), var(--pale) 12px, #dde6dc 12px, #dde6dc 24px
+  );
+  color: #3c4a40;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.photoslot span { font-weight: 400; color: var(--slate); max-width: 30ch; }
+
+/* --- print ------------------------------------------------------------- */
+
+@media print {
+  .utility, .navmob, .nav, .contactbar, .photoslot, .flagbox { display: none !important; }
+  body { background: #fff; color: #000; font-size: 11pt; padding-bottom: 0; }
+  .band--green, .band--ink { background: #fff !important; color: #000 !important; }
+  .band--green h1, .band--green h2, .band--ink h2,
+  .band--green .lede, .band--green .eyebrow { color: #000 !important; }
+  .btn { border: 1px solid #000 !important; background: #fff !important; color: #000 !important; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 9pt; word-break: break-all; }
+}
+
+
+/* ==========================================================================
+   Additions: sticky masthead, the route markers, the road connectors, the
+   animated statistic and the package hover states.
+   ========================================================================== */
+
+/* --- the animated statistic -------------------------------------------- */
+
+/* Tabular figures and a reserved width, so counting 0 -> 98 cannot reflow the
+   line it sits on. The finished value is in the HTML; script only replays it. */
+.countup {
+  display: inline-block;
+  min-width: 3.2ch;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* --- road connectors ---------------------------------------------------- */
+
+/* A short stretch of carriageway between sections, curving left then right
+   down the page, so the page reads as one route rather than a stack of blocks.
+   Decorative and static: no motion, no request, no image bytes. */
+.road {
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  padding-block: clamp(0.25rem, 1.5vw, 0.75rem);
+}
+.road--pale { background: var(--pale); }
+.road svg {
+  width: min(280px, 62%);
+  height: clamp(3rem, 7vw, 5.25rem);
+  overflow: visible;
+}
+.road--flip svg { transform: scaleX(-1); }
+
+/* --- the route ---------------------------------------------------------- */
+
+.route { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--gap); }
+@media (min-width: 46rem) { .route { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 68rem) { .route { grid-template-columns: repeat(4, 1fr); } }
+
+.route__step {
+  margin: 0;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(1.15rem, 3vw, 1.6rem);
+}
+.route__step h3 { margin-bottom: 0.45rem; }
+.route__step p { color: var(--slate); margin: 0; }
+
+/* A route-marker plate: the double edge and tabular figures of North American
+   highway signage, without imitating any actual Ontario sign — a private
+   business must not appear to carry official status. */
+.route__plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.5rem;
+  height: 2.6rem;
+  margin-bottom: 0.9rem;
+  padding: 0 0.6rem;
+  background: var(--green);
+  color: var(--white);
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 3px var(--green), inset 0 0 0 4px rgba(255, 255, 255, 0.9);
+}
+
+/* --- offer panel watermarks --------------------------------------------- */
+
+.offer__panel { position: relative; overflow: hidden; }
+/* Lift only the copy above the watermark. Selecting by exclusion here would
+   out-specify .offer__photo and drag the image back into the flow. */
+.offer__panel > :is(h3, p) { position: relative; }
+
+.offer__motif {
+  position: absolute;
+  top: clamp(0.6rem, 2.5vw, 1.4rem);
+  right: clamp(0.6rem, 2.5vw, 1.6rem);
+  width: clamp(5rem, 15vw, 10.5rem);
+  height: auto;
+  color: var(--green);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+/* --- package hover ------------------------------------------------------ */
+
+/* Hover only, and only with a real pointer: on a touch screen there is no
+   hover state to enter, and the features stay visible at all times so the
+   comparison never depends on an interaction. */
+@media (hover: hover) and (pointer: fine) {
+  .pkg {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .pkg:hover { transform: translateY(-5px); }
+  .pkg--bronze:hover  { border-color: #8f6432; box-shadow: 0 12px 26px rgba(107, 63, 27, 0.26); }
+  .pkg--silver:hover  { border-color: #5f6873; box-shadow: 0 12px 26px rgba(90, 100, 110, 0.26); }
+  .pkg--gold:hover    { border-color: #7d6210; box-shadow: 0 14px 30px rgba(150, 118, 26, 0.34); }
+  .pkg--diamond:hover { border-color: #3f6796; box-shadow: 0 16px 34px rgba(43, 74, 110, 0.4); }
+  .pkg--diamond.pkg--featured:hover {
+    box-shadow: 0 16px 34px rgba(43, 74, 110, 0.4), inset 0 0 0 1px #3f6796;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pkg:hover { transform: none; }
+}
+
+/* --- diamond, cut rather than coloured ---------------------------------- */
+
+/* Facets raked across the whole card, so Diamond reads as glass rather than a
+   blue rectangle. Static, non-interactive, and behind every child. */
+.pkg--diamond { position: relative; }
+.pkg--diamond::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(126deg, transparent 45%, rgba(255, 255, 255, 0.62) 49.5%, transparent 54%),
+    linear-gradient(58deg, transparent 61%, rgba(122, 170, 220, 0.2) 66%, transparent 71%),
+    linear-gradient(199deg, transparent 28%, rgba(176, 205, 236, 0.24) 33%, transparent 39%),
+    linear-gradient(21deg, transparent 74%, rgba(255, 255, 255, 0.4) 78%, transparent 83%);
+}
+.pkg--diamond > * { position: relative; }
+
+
+/* ==========================================================================
+   Imagery: the hero car and the offer panel backgrounds.
+   Both slots reserve their box before any file exists, so dropping a real
+   photograph in cannot move anything on the page.
+   ========================================================================== */
+
+/* --- hero tagline ------------------------------------------------------- */
+
+/* --- slogan -------------------------------------------------------------
+   "We teach for life", in the hero, the footer and on About Us.
+
+   It used to be set like any other line of copy, so it read as a sentence
+   rather than as the school's slogan. It now has a shape of its own: curly
+   quotation marks, and a short amber rule either side, the way a motto sits on
+   a crest. The shape carries the distinction rather than colour alone, which
+   matters twice here: the hero's H1 is already amber, and on the light About
+   page amber text would fail contrast (1.73:1), so the words stay white or
+   green and only the decoration is amber.
+
+   No italic. Libre Franklin is loaded upright only; an italic would be either
+   a synthesised slant or another font file on every page.
+
+   The quotation marks are generated and given empty alternative text
+   (`content: "…" / ""`), so screen readers announce the words and not
+   "left double quotation mark". Browsers without that syntax ignore the second
+   declaration and keep the first, which is the right fallback: visible marks.
+   ------------------------------------------------------------------------ */
+.slogan {
+  display: flex;
+  align-items: center;
+  gap: 0.65em;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.2rem, 1.02rem + 0.75vw, 1.55rem);
+  line-height: 1.2;
+  letter-spacing: 0.005em;
+  color: var(--white);
+  text-wrap: balance;
+  margin: 0 0 1.1rem;
+}
+
+.slogan::before,
+.slogan::after {
+  content: "";
+  flex: 0 0 1.6em;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--amber);
+}
+
+.slogan__words::before {
+  content: "\201C";
+  content: "\201C" / "";
+  color: var(--amber);
+}
+
+.slogan__words::after {
+  content: "\201D";
+  content: "\201D" / "";
+  color: var(--amber);
+}
+
+/* The footer is a column of small type; the slogan scales down with it. */
+.slogan--small {
+  font-size: 1.2rem;
+  margin: -0.2rem 0 1rem;
+}
+
+/* On a light ground: green words, amber rules and marks. */
+.slogan--onLight {
+  color: var(--green);
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.8rem);
+  margin: 2rem 0 0.75rem;
+}
+
+/* --- hero car ----------------------------------------------------------- */
+
+.herocar {
+  margin-top: clamp(1.5rem, 3.5vw, 2.75rem);
+  /* The car travels sideways; clipping here keeps that from ever producing a
+     horizontal scrollbar on the page. */
+  overflow: hidden;
+
+  /* Geometry of the supplied photograph, 1200x457 with a 2.626 aspect. */
+  --car-h: clamp(6.5rem, 17vw, 12.5rem);
+  --car-w: calc(var(--car-h) * 2.626);
+
+  /* Far right to far left: at either extreme one edge of the car meets one
+     edge of the viewport, so it is always fully visible and always moving. */
+  --travel: calc((100vw - var(--car-w)) / 2);
+
+  /* How far the wheels turn across that distance. The default is right for the
+     mid-range viewports where the car scales with the screen; the fallback
+     driver recomputes it exactly for the current width. */
+  --spin: 1065deg;
+
+  /* Height of this element: the car stage plus the road strip beneath it. The
+     road border sits inside its height under border-box, so this is a plain
+     sum. Derived from the same variable the road uses rather than a literal,
+     so the two cannot drift apart. Needed because the drive range below is an
+     offset into the timeline rather than a named range. */
+  --road-h: 0.5rem;
+  --car-box: calc(var(--car-h) + var(--road-h));
+
+  /* Both the body and the wheels hang off this one timeline, so they can never
+     drift out of step. */
+  view-timeline: --herocar block;
+}
+
+/* The stage owns the height. Whether it holds a drawn car or a photograph,
+   the box is identical, so the swap is invisible to layout. */
+.herocar__stage {
+  position: relative;
+  width: 100%;
+  height: var(--car-h);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Sized to the car itself rather than the stage, so the travel distance is
+   independent of how wide the band happens to be. */
+.herocar__travel {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  will-change: transform;
+  /* --drive runs 0 (far right) to 1 (far left). The CSS scroll animation below
+     overrides this outright where it is supported; where it is not, the
+     fallback driver writes --drive instead. 0.5 rests dead centre. */
+  transform: translateX(calc(var(--travel) * (1 - 2 * var(--drive, 0.5))));
+}
+
+.herocar__car { position: relative; height: 100%; }
+
+.herocar__art,
+.herocar__photo {
+  height: 100%;
+  width: auto;
+  max-width: none;
+}
+
+/* Each wheel is a circle that reuses the car photograph as its own background,
+   offset so the wheel sits dead centre. No extra file and no extra request:
+   the image is already in memory. Percentages throughout, so the whole thing
+   rescales with the car at any viewport.
+
+   Front hub at 214,369 and rear at 962,369 in the 1200x457 source, both with a
+   62px radius, measured against the artwork rather than estimated. */
+.herocar__wheel {
+  position: absolute;
+  top: 67.177%;
+  width: 10.3333%;
+  height: 27.1335%;
+  border-radius: 50%;
+  /* The phone-sized file by default, swapped above 48rem to match the
+     <picture> in HeroCar.tsx. Everything here is a percentage, so the same crop
+     lands on the same wheel whichever of the two files is in use, and tying
+     both to one media query is what stops the page fetching both. */
+  background-image: url("/media/hero-car-800.webp");
+  background-repeat: no-repeat;
+  background-size: 967.742% auto;
+  transform: rotate(calc(var(--spin) * -1 * var(--drive, 0.5)));
+  will-change: transform;
+}
+@media (min-width: 48rem) {
+  .herocar__wheel { background-image: url("/media/hero-car.webp"); }
+}
+.herocar__wheel--front { left: 12.6667%; background-position: 14.126% 92.192%; }
+.herocar__wheel--rear { left: 75%; background-position: 83.643% 92.192%; }
+/* The drawn fallback faces right; the photograph faces left. Flip the drawing
+   so both point the way the car travels. */
+.herocar__art { transform: scaleX(-1); }
+
+/* The headlight comes up once, over a second, and then stays on. It does not
+   loop: a pulsing light on a driving school page would read as a hazard. */
+.herocar__beam {
+  animation: herocar-beam 1.1s ease-out 0.35s both;
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+@keyframes herocar-beam {
+  from { opacity: 0; }
+  to   { opacity: 0.28; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .herocar__beam { animation: none; opacity: 0.28; }
+}
+
+/* The drive. A scroll-driven animation rather than a scroll listener: it runs
+   off the main thread, costs no JavaScript, and reverses when the reader
+   scrolls back up without any extra code. Browsers that do not support
+   animation-timeline get a stationary car. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .herocar__travel,
+    .herocar__wheel {
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --herocar;
+      /* Tied to the element, so the drive lasts as long as the car is visible on
+         any viewport rather than running against a guessed distance.
+
+         The plain version of this range is `entry 100% exit 100%`: start when
+         the car is fully on screen, finish when it has fully left. These two
+         offsets are that range brought forward by 8% of a viewport height and
+         shortened to 92% of its length, so the car sets off sooner and covers
+         the ground faster. Written as lengths because a named range cannot
+         carry an offset. */
+      animation-range: calc(var(--car-box) - 8vh) calc(var(--car-box) + 62vh);
+    }
+    .herocar__travel { animation-name: herocar-drive; }
+    .herocar__wheel { animation-name: herocar-spin; }
+  }
+}
+
+@keyframes herocar-drive {
+  from { transform: translateX(var(--travel)); }
+  to   { transform: translateX(calc(var(--travel) * -1)); }
+}
+
+/* Anticlockwise, because the car is travelling left. */
+@keyframes herocar-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(calc(var(--spin) * -1)); }
+}
+
+/* The road under the car, running the full width of the band. */
+.herocar__road {
+  position: relative;
+  height: var(--road-h);
+  background: rgba(0, 0, 0, 0.22);
+  border-top: 2px solid rgba(255, 255, 255, 0.18);
+}
+.herocar__lane {
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 2px;
+  transform: translateY(-50%);
+  background: repeating-linear-gradient(
+    to right,
+    var(--amber) 0 22px,
+    transparent 22px 44px
+  );
+  opacity: 0.65;
+}
+
+/* The hero band's own bottom padding is absorbed by the road, which should
+   meet the edge of the band rather than float above it. */
+.hero { padding-bottom: 0; }
+
+/* --- offer panel photographs -------------------------------------------- */
+
+/* Held to the right of the panel and faded out towards the copy, so text
+   contrast is never at the mercy of whatever is in the picture. */
+/* A scrim between the photograph and the copy. The mask fades the image away
+   from the text; this guarantees contrast over whatever is left, so panel
+   legibility never depends on how busy a particular photograph happens to be.
+   Only painted when there is an image to sit behind. */
+.offer__panel:has(.offer__photo)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* Many stops rather than three, so the scrim thins out gradually instead of
+     stepping. It reaches fully clear well before the right edge, which is what
+     lets the photograph actually read. */
+  background: linear-gradient(
+    to right,
+    var(--paper) 0%,
+    rgba(247, 248, 246, 0.97) 22%,
+    rgba(247, 248, 246, 0.86) 36%,
+    rgba(247, 248, 246, 0.66) 50%,
+    rgba(247, 248, 246, 0.42) 64%,
+    rgba(247, 248, 246, 0.2) 78%,
+    rgba(247, 248, 246, 0.06) 90%,
+    rgba(247, 248, 246, 0) 100%
+  );
+}
+.offer__panel > :is(h3, p) { z-index: 2; }
+
+.offer__photo {
+  z-index: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 66%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.62;
+  pointer-events: none;
+  /* An eased ramp across the whole width rather than a hard edge at 34%. The
+     extra stops approximate a curve, so there is no visible line where the
+     image starts. */
+  -webkit-mask-image: linear-gradient(
+    to left,
+    #000 0%, rgba(0, 0, 0, 0.97) 16%, rgba(0, 0, 0, 0.88) 30%,
+    rgba(0, 0, 0, 0.72) 44%, rgba(0, 0, 0, 0.5) 58%, rgba(0, 0, 0, 0.29) 72%,
+    rgba(0, 0, 0, 0.12) 86%, transparent 100%
+  );
+  mask-image: linear-gradient(
+    to left,
+    #000 0%, rgba(0, 0, 0, 0.97) 16%, rgba(0, 0, 0, 0.88) 30%,
+    rgba(0, 0, 0, 0.72) 44%, rgba(0, 0, 0, 0.5) 58%, rgba(0, 0, 0, 0.29) 72%,
+    rgba(0, 0, 0, 0.12) 86%, transparent 100%
+  );
+}
+
+/* Once the panel is wide enough to sit beside the tab strip, the copy stops
+   before the densest part of the photograph, so contrast never depends on what
+   happens to be in a given picture. */
+@media (min-width: 62rem) {
+  .offer__panel:has(.offer__photo) > :is(h3, p) { max-width: 62%; }
+}
+
+/* The desktop treatment cannot survive a narrow column, and stretching it to
+   fit was the bug: it puts a 3:2 photograph in the right-hand two thirds of a
+   wide panel and fades it leftward under the copy. At phone width that same box
+   becomes roughly 3:7, so `object-fit: cover` throws away about eighty per cent
+   of the picture's width, and the leftward fade erases most of what survives.
+   What you see is a vertical sliver of a car and a blank left half, which reads
+   as a broken image rather than a backdrop.
+
+   So the photograph stops being a backdrop here. It moves below the copy into a
+   band close to its own proportions, where it can simply be looked at: no
+   opacity, no scrim, and nothing overlapping it. */
+@media (max-width: 61.99rem) {
+  .offer__panel:has(.offer__photo) {
+    /* Scales with the panel so a wide tablet does not get a letterbox slit.
+       At 375px this is the 7rem floor, giving roughly 3:1; at 990px it is
+       15rem, giving roughly 4.4:1 in a much wider panel. */
+    --offer-band: clamp(7rem, 22vw, 15rem);
+    /* 1.25rem is what the panel's own `clamp(1.25rem, 3vw, 1.9rem)` padding
+       resolves to at these widths, so the band clears the copy by one gap. */
+    padding-bottom: calc(var(--offer-band) + 1.25rem);
+  }
+  .offer__photo {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--offer-band);
+    object-position: center 55%;
+    /* Opacity is deliberately not set here. Inheriting the 0.62 above keeps a
+       phone at the same maximum visibility as a desktop panel's right edge,
+       where the scrim has fully cleared, and means the two cannot drift apart
+       if that value is ever tuned.
+
+       The fade runs over the top seventy per cent of the band rather than the
+       top quarter, in many small steps rather than three. A short ramp between
+       two stops reads as a visible edge partway up the picture; this one has
+       no point you can put a finger on. */
+    --offer-fade: linear-gradient(
+      to top,
+      #000 0%, #000 30%,
+      rgba(0, 0, 0, 0.94) 42%, rgba(0, 0, 0, 0.84) 53%,
+      rgba(0, 0, 0, 0.68) 64%, rgba(0, 0, 0, 0.5) 74%,
+      rgba(0, 0, 0, 0.32) 83%, rgba(0, 0, 0, 0.16) 92%,
+      transparent 100%
+    );
+    -webkit-mask-image: var(--offer-fade);
+    mask-image: var(--offer-fade);
+  }
+  /* The copy no longer sits over the picture, so it needs nothing behind it. */
+  .offer__panel:has(.offer__photo)::after { display: none; }
+}
+
+@media (prefers-contrast: more) {
+  .offer__photo { display: none; }
+}
+
+
+/* ==========================================================================
+   Interior pages. Everything below reuses the tokens and patterns the home
+   page established: the same bands, the same 2px radius, the same amber rule,
+   the same bordered blocks. Nothing here introduces a new colour, a new
+   typeface or a new kind of container.
+   ========================================================================== */
+
+/* --- page header -------------------------------------------------------- */
+
+/* The interior equivalent of the hero: same green band, same amber rule, same
+   type hierarchy, without the car or the facts panel. */
+.pagehead { padding-block: clamp(2rem, 4.5vw, 3.25rem); }
+.pagehead h1 {
+  font-size: clamp(1.9rem, 1.4rem + 2.1vw, 2.9rem);
+  color: var(--white);
+  max-width: 20ch;
+  margin-bottom: 0.5rem;
+}
+.pagehead .lede { color: var(--pale); }
+
+.crumbs {
+  font-size: 1rem;
+  color: var(--pale);
+  margin: 0 0 1rem;
+}
+.crumbs ol { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; padding: 0; }
+.crumbs li { margin: 0; display: flex; gap: 0.5rem; align-items: baseline; }
+.crumbs li + li::before { content: "/"; color: var(--amber); }
+.crumbs a { color: var(--pale); }
+.crumbs [aria-current="page"] { color: var(--white); font-weight: 600; }
+
+/* --- prose -------------------------------------------------------------- */
+
+/* Long-form copy: the privacy policy, the longer explanations on How It Works.
+   Held to the same measure as everything else. */
+.prose { max-width: var(--measure); }
+.prose h2 { margin-top: 2.5rem; }
+.prose h3 { margin-top: 1.75rem; }
+.prose h2:first-child, .prose h3:first-child { margin-top: 0; }
+.prose ul { padding-left: 1.25em; }
+.prose li { margin-bottom: 0.5em; }
+
+/* --- note card ---------------------------------------------------------- */
+
+/* A quiet callout for things worth pulling out of the flow. Pale green rather
+   than amber: amber is reserved for markers, and a coloured warning box is
+   exactly what was stripped off the home page. */
+.note {
+  background: var(--pale);
+  border-left: 5px solid var(--green);
+  border-radius: var(--radius);
+  padding: clamp(1rem, 2.5vw, 1.4rem);
+  margin: 1.75rem 0;
+}
+.note > :last-child { margin-bottom: 0; }
+.note strong { color: var(--green); }
+
+/* --- FAQ accordion ------------------------------------------------------ */
+
+/* Native disclosure elements. They carry the right semantics, announce their
+   expanded state, and respond to Enter and Space without a line of script —
+   the same reasoning as the mobile navigation. */
+.faq { display: grid; gap: 0.75rem; }
+
+.faq__item {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.faq__item[open] { border-color: var(--green); }
+
+.faq__q {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--green);
+  cursor: pointer;
+  list-style: none;
+  min-height: 3.25rem;
+}
+.faq__q::-webkit-details-marker { display: none; }
+.faq__q:hover { background: var(--pale); }
+
+/* A plus that becomes a minus. Drawn from two rules rather than an icon font
+   or an SVG, so it costs nothing and inherits the text colour. */
+.faq__mark {
+  position: relative;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.28rem;
+}
+.faq__mark::before,
+.faq__mark::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 3px;
+  background: var(--amber);
+  transform: translateY(-50%);
+}
+.faq__mark::after { transform: translateY(-50%) rotate(90deg); }
+.faq__item[open] .faq__mark::after { transform: translateY(-50%) rotate(0deg); }
+
+.faq__a { padding: 0 1.15rem 1.25rem; max-width: var(--measure); }
+.faq__a > :last-child { margin-bottom: 0; }
+
+/* --- comparison table --------------------------------------------------- */
+
+.tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.ctable { width: 100%; border-collapse: collapse; font-size: 1.0625rem; min-width: 44rem; }
+.ctable caption {
+  text-align: left;
+  padding: 0 0 0.9rem;
+  color: var(--slate);
+  font-size: 1rem;
+}
+.ctable th, .ctable td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+  vertical-align: top;
+}
+.ctable thead th {
+  background: var(--green);
+  color: var(--white);
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  border-bottom: 0;
+}
+.ctable tbody th {
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--pale);
+  white-space: nowrap;
+}
+.ctable tbody tr:last-child th, .ctable tbody tr:last-child td { border-bottom: 0; }
+.ctable .yes { color: var(--green); font-weight: 700; }
+.ctable .no { color: var(--slate); }
+.ctable .price { font-family: var(--font-heading), system-ui, sans-serif; font-weight: 800; font-size: 1.2rem; }
+
+/* --- link list ---------------------------------------------------------- */
+
+/* Used on Free Resources. A bordered row per link, matching the offer tabs and
+   the route steps rather than inventing a third list style. */
+.linklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.linklist li { margin: 0; }
+.linklist a {
+  display: block;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+.linklist a:hover { background: var(--pale); border-color: var(--green); }
+.linklist strong {
+  display: block;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  color: var(--green);
+  margin-bottom: 0.2rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.linklist span { color: var(--slate); font-size: 1rem; }
+
+/* --- contact form ------------------------------------------------------- */
+
+.form { display: grid; gap: 1.15rem; max-width: 34rem; }
+.form label {
+  display: block;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  margin-bottom: 0.35rem;
+}
+.form input,
+.form select,
+.form textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 1.0625rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.8rem;
+  min-height: 3rem;
+}
+.form textarea { min-height: 8rem; resize: vertical; }
+.form input:focus-visible,
+.form select:focus-visible,
+.form textarea:focus-visible { border-color: var(--green); }
+.form .hint { font-size: 1rem; color: var(--slate); margin: 0.35rem 0 0; }
+.form .required { color: var(--green); }
+
+/* --- portrait ----------------------------------------------------------- */
+
+.portrait { margin: 0; }
+.portrait img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.portrait figcaption {
+  margin-top: 0.6rem;
+  font-size: 1rem;
+  color: var(--slate);
+}
+
+/* --- map ---------------------------------------------------------------- */
+
+/* A still image and a link out, never an embed: a Maps iframe sets cookies and
+   would drag a consent banner onto a site built to avoid one. */
+.map { margin: 0; }
+.map img, .map .photoslot {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.map figcaption { margin-top: 0.6rem; font-size: 1rem; color: var(--slate); }
+
+/* --- video facade ------------------------------------------------------- */
+
+/* Nothing from YouTube loads until the reader asks for it. */
+.video { position: relative; aspect-ratio: 16 / 9; background: var(--green-dark); border-radius: var(--radius); overflow: hidden; }
+.video img, .video iframe { width: 100%; height: 100%; border: 0; object-fit: cover; }
+.video__play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: var(--white);
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  cursor: pointer;
+}
+.video__play span { background: rgba(15, 44, 33, 0.72); padding: 0.6rem 1.1rem; border-radius: var(--radius); }
+.video__play:hover span { background: var(--green); }
+
+
+/* --- feature band -------------------------------------------------------
+   A full-width photograph between sections. Fixed height so it never shifts
+   the page, and any caption sits on a scrim rather than on the photograph.
+   ---------------------------------------------------------------------- */
+
+.feature { position: relative; margin: 0; overflow: hidden; background: var(--green-dark); }
+.feature img {
+  width: 100%;
+  height: clamp(9rem, 22vw, 17rem);
+  object-fit: cover;
+  object-position: center 32%;
+}
+.feature figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: clamp(0.75rem, 2vw, 1.15rem) clamp(1rem, 4vw, 2rem);
+  background: linear-gradient(to top, rgba(15, 44, 33, 0.92), rgba(15, 44, 33, 0));
+  color: var(--white);
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
+}
+
+/* --- awards ------------------------------------------------------------- */
+
+.awards { display: grid; gap: var(--gap); align-items: center; }
+@media (min-width: 46rem) { .awards { grid-template-columns: auto 1fr; } }
+.awards img { width: clamp(7rem, 18vw, 10rem); height: auto; }
+
+/* The award badge is a link to the award's own page (components/AwardBadge).
+   No underline, no colour change: the badge is the target, and the focus ring
+   from :focus-visible shows keyboard users where they are. A slight lift on
+   hover says it can be clicked without restyling the image itself. */
+.award {
+  display: inline-block;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 150ms ease;
+}
+.award:hover { transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .award { transition: none; } .award:hover { transform: none; } }
+.award img { display: block; }
+
+/* Home page: badge and a caption naming the award, under the reviews. */
+.award-strip { margin-top: 2.5rem; display: flex; justify-content: center; }
+.award--captioned {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1.25rem 0.6rem 0.6rem;
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+}
+.award--captioned img { width: 4.75rem; height: auto; }
+.award__caption { display: grid; gap: 0.15rem; line-height: 1.25; }
+.award__caption strong {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.125rem;
+  color: var(--green);
+}
+.award__caption span { color: var(--slate); font-size: 1rem; }
+.awards ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.awards li {
+  margin: 0;
+  background: var(--pale);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.8rem;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--green);
+}
+
+/* --- skills grid -------------------------------------------------------- */
+
+.skills { display: grid; gap: var(--gap); }
+@media (min-width: 46rem) { .skills { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 68rem) { .skills { grid-template-columns: repeat(4, 1fr); } }
+.skills__group {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-top: 5px solid var(--amber);
+  border-radius: var(--radius);
+  padding: clamp(1.15rem, 3vw, 1.5rem);
+}
+.skills__group h3 { margin-bottom: 0.75rem; }
+.skills__group ul { list-style: none; margin: 0; padding: 0; font-size: 1.0625rem; }
+.skills__group li {
+  margin: 0;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--hairline);
+  line-height: 1.4;
+}
+.skills__group li:first-child { border-top: 0; padding-top: 0; }
+
+/* --- video grid --------------------------------------------------------- */
+
+.videos { display: grid; gap: var(--gap); }
+@media (min-width: 46rem) { .videos { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 68rem) { .videos { grid-template-columns: repeat(3, 1fr); } }
+.videocard {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.videocard h3 {
+  font-size: 1.0625rem;
+  margin: 0;
+  padding: 0.9rem 1rem;
+}
+
+/* --- layered pages ------------------------------------------------------
+   A fixed photograph behind the interior pages, with the content bands
+   scrolling over it and `.reveal` gaps opening between them.
+
+   The layer sits at `z-index: -1`, which paints it above the canvas colour
+   propagated from `body` but below every in-flow block background — so the
+   bands hide it and the gaps do not, with no stacking games anywhere else.
+   ---------------------------------------------------------------------- */
+
+.pagebg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--green-dark);
+  pointer-events: none;
+}
+
+/* Overscan top and bottom so the drift never exposes an edge. */
+.pagebg__layer {
+  position: absolute;
+  inset: -9% 0;
+  background: url("/media/page-bg-sm.webp") center / cover no-repeat;
+  transform: translate3d(0, calc(var(--bg-progress, 0) * -7%), 0);
+}
+@media (min-width: 48rem) {
+  .pagebg__layer { background-image: url("/media/page-bg.webp"); }
+}
+
+/* Where the browser drives scroll timelines itself, this runs on the
+   compositor and the JS fallback stands down. The animation wins over the
+   inline custom property above, so the two cannot fight. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll(root block)) {
+    .pagebg__layer {
+      animation: pagebg-drift linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+@keyframes pagebg-drift {
+  from { transform: translate3d(0, 3.5%, 0); }
+  to   { transform: translate3d(0, -7%, 0); }
+}
+
+/* Heavy enough that the photograph reads as the school's green rather than as
+   a stock photograph, and that white text over it clears AA comfortably. */
+.pagebg__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(115% 68% at 50% 42%, rgba(15, 44, 33, 0.08), rgba(15, 44, 33, 0.55) 82%),
+    linear-gradient(180deg, rgba(15, 44, 33, 0.42), rgba(23, 32, 27, 0.55));
+}
+
+/* Bands are transparent by default, which is fine over the paper canvas and
+   not fine over a photograph. This gives the unmodified ones a colour without
+   out-specifying `.band--pale` / `.band--green`, which set their own. */
+body:has(.pagebg) { --band-bg: var(--paper); }
+
+.reveal {
+  position: relative;
+  min-height: clamp(14rem, 42vh, 26rem);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.7rem;
+  padding: clamp(2.75rem, 7vw, 5rem) 1.25rem;
+  text-align: center;
+  color: var(--white);
+}
+.reveal .rule { margin: 0 0 0.3rem; }
+/* A pool of shade under the words only, so the scrim above can stay light
+   enough to read as a photograph without costing the text any contrast. */
+.reveal > * { position: relative; z-index: 1; }
+.reveal::before,
+.reveal::after,
+.reveal__shade { pointer-events: none; }
+.reveal__shade {
+  position: absolute;
+  inset: clamp(2rem, 6vw, 4rem) 0;
+  background: radial-gradient(72% 82% at 50% 50%, rgba(9, 26, 19, 0.74), rgba(9, 26, 19, 0) 78%);
+}
+.reveal__line {
+  margin: 0;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.35rem, 1rem + 1.9vw, 2.15rem);
+  line-height: 1.2;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+.reveal__sub {
+  margin: 0;
+  max-width: 42ch;
+  color: var(--white);
+  font-size: 1.0625rem;
+}
+
+/* Feather into the bands above and below so the gap reads as the page opening
+   up rather than as two hard seams. */
+.reveal::before,
+.reveal::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: clamp(2.5rem, 7vw, 4.5rem);
+  pointer-events: none;
+}
+.reveal::before { top: 0; background: linear-gradient(to bottom, var(--rv-from), transparent); }
+.reveal::after { bottom: 0; background: linear-gradient(to top, var(--rv-to), transparent); }
+
+.reveal--from-paper { --rv-from: var(--paper); }
+.reveal--from-pale  { --rv-from: var(--pale); }
+.reveal--from-green { --rv-from: var(--green); }
+.reveal--from-ink   { --rv-from: var(--ink); }
+.reveal--from-dark  { --rv-from: var(--green-dark); }
+.reveal--to-paper { --rv-to: var(--paper); }
+.reveal--to-pale  { --rv-to: var(--pale); }
+.reveal--to-green { --rv-to: var(--green); }
+.reveal--to-ink   { --rv-to: var(--ink); }
+.reveal--to-dark  { --rv-to: var(--green-dark); }
+
+/* --- reviews that outgrow their card ------------------------------------
+   Every card gets the same fixed window and the same creep. Whether anything
+   actually moves is decided here rather than in the component, because only
+   CSS knows how the text wrapped: the travel is
+   `min(0px, var(--rv-h) - 100%)` — the window height minus the paragraph's own
+   height — which is zero for a review that already fits, at every card width.
+   ---------------------------------------------------------------------- */
+
+.review__window {
+  margin-bottom: 0.75rem;
+  --rv-h: 9.75rem;
+  height: var(--rv-h);
+  overflow: hidden;
+  /* The soft bottom edge says "there is more below". It cannot be conditional
+     on the text actually overflowing — CSS has no selector for that — so it
+     fades to 28% rather than to nothing, which is unmistakable across a cut
+     line and barely visible under a review that happens to fit. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 1.4rem), rgba(0, 0, 0, 0.28));
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 1.4rem), rgba(0, 0, 0, 0.28));
+}
+.review__text { margin: 0; }
+
+/* One card fills the rail on a phone, so it can afford to be taller — and a
+   review that fits entirely does not creep at all, which is the better resting
+   state for the short ones. */
+@media (max-width: 46rem) {
+  .review__window { --rv-h: 12.5rem; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .review__window .review__text {
+    animation: review-creep var(--rv-dur, 26s) linear infinite alternate;
+  }
+  /* Stop moving the moment anyone is actually reading it. */
+  .review:hover .review__text,
+  .reviews:focus-within .review__text { animation-play-state: paused; }
+}
+
+@keyframes review-creep {
+  0%, 12%   { transform: translateY(0); }
+  88%, 100% { transform: translateY(min(0px, calc(var(--rv-h) - 100%))); }
+}
+
+/* Without the creep the window still has to be escapable, so it scrolls. */
+@media (prefers-reduced-motion: reduce) {
+  .review__window { overflow-y: auto; }
+}
+
+/* While the pointer is over a card, the reader drives it. See
+   components/ReviewScroll.tsx for why the animation has to come off rather
+   than simply pause: a running animation outranks the inline transform the
+   scroll position is converted into.
+
+   The scrollbar is hidden because showing one would narrow the text by about
+   ten pixels the instant the pointer arrived, reflowing every line under the
+   cursor. The card visibly creeping, and the soft bottom edge, are the
+   affordance instead. */
+@media (hover: hover) and (pointer: fine) {
+  .review__window[data-manual] {
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .review__window[data-manual]::-webkit-scrollbar { display: none; }
+  .review__window[data-manual] .review__text { animation: none; }
+}
+
+/* --- package tier photographs -------------------------------------------
+   Client request, 2026-09-09: a car behind each tier, colour matched to the
+   tier's name. BMW for bronze, Mercedes for silver, Porsche for gold, a
+   Rolls-Royce for diamond.
+
+   The photograph goes underneath the tier's own wash rather than replacing it,
+   so the card keeps its existing colour and only gains texture. The wash is
+   the same gradient as before with an alpha applied, which is what controls
+   how much of the car shows: the two variables below are the only dial, and
+   they are set where the contrast measurement said they had to be, not by eye.
+
+   These rules come after the tier rules on purpose. Those use the `background`
+   shorthand, which would reset `background-size` and `background-position` if
+   it ran second. Only `background-image` is redefined here, so each tier keeps
+   its own border colour and shadow. */
+
+.pkg--bronze,
+.pkg--silver,
+.pkg--gold,
+.pkg--diamond {
+  /* The strongest veil that keeps a real margin. Measured across all four
+     photographs at the desktop card size: slate body text lands at 5.09:1
+     against a 4.5 floor, ink at 10.92:1. 0.86/0.80 drops slate to 4.69 and
+     0.84/0.77 fails outright at 4.32, so this is the edge, not a guess. */
+  --pkg-veil-top: 0.88;
+  --pkg-veil-bottom: 0.83;
+  background-repeat: no-repeat;
+  background-size: auto, cover;
+  background-position: center, center 62%;
+}
+
+.pkg--bronze {
+  background-image:
+    linear-gradient(180deg, rgb(247 240 232 / var(--pkg-veil-top)) 0%, rgb(253 251 248 / var(--pkg-veil-bottom)) 62%),
+    url("/media/pkg-bronze.webp");
+}
+.pkg--silver {
+  background-image:
+    linear-gradient(180deg, rgb(241 243 246 / var(--pkg-veil-top)) 0%, rgb(252 253 254 / var(--pkg-veil-bottom)) 62%),
+    url("/media/pkg-silver.webp");
+}
+.pkg--gold {
+  background-image:
+    linear-gradient(180deg, rgb(253 246 226 / var(--pkg-veil-top)) 0%, rgb(255 253 246 / var(--pkg-veil-bottom)) 62%),
+    url("/media/pkg-gold.webp");
+}
+.pkg--diamond {
+  background-image:
+    linear-gradient(180deg, rgb(238 243 251 / var(--pkg-veil-top)) 0%, rgb(251 252 254 / var(--pkg-veil-bottom)) 62%),
+    url("/media/pkg-diamond.webp");
+}
+
+/* Nobody needs a decorative photograph fighting the text at this setting. */
+@media (prefers-contrast: more) {
+  .pkg--bronze,
+  .pkg--silver,
+  .pkg--gold,
+  .pkg--diamond { --pkg-veil-top: 1; --pkg-veil-bottom: 1; }
+}
+
+/* Only shown when a submission fails, which on a contact form is the moment a
+   visitor is most likely to give up. It carries the phone number as the way
+   out, so the message is never just "something went wrong". */
+.form__status {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #8f2f2f;
+  border-left-width: 5px;
+  border-radius: var(--radius);
+  background: #fdf3f3;
+  color: #6d1f1f;
+  font-size: 1.0625rem;
+}

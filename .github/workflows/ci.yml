@@ -1,0 +1,34 @@
+name: CI
+
+# Runs on every push to main and every pull request. Cloudflare Pages still does
+# the deploying; this is the check that the code is sound before it goes out.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22 # matches NODE_VERSION in the Cloudflare Pages project
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+      # No STORYBLOK_TOKEN here on purpose: the build uses the local package
+      # content, which proves the site compiles and exports without exposing the
+      # CMS token to CI. Content from Storyblok is validated by the real
+      # Cloudflare build, which fails the deploy on anything malformed.
+      - name: Build (static export, local content)
+        run: npm run build

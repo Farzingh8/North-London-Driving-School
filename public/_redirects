@@ -1,0 +1,71 @@
+# Cloudflare Pages redirect map.
+#
+# Every URL the previous WordPress site published, pointed at its replacement.
+# These matter more than they look: the old pages have whatever search equity
+# the business has built since 2019, and a 301 carries it across where a 404
+# throws it away.
+#
+# Paths that are unchanged between the two sites — /about-us, /packages,
+# /contact, /privacy-policy — need no rule and are listed here only so the next
+# person can see that they were considered rather than missed.
+
+# EVERY RULE IS LISTED TWICE, WITH AND WITHOUT A TRAILING SLASH. WordPress
+# published its pages with the slash (/key-information/), and that is the form
+# Google indexed: the Search Console export of 2026-09-08 lists /key-information/,
+# /about-us-mobile/, /packages-mobile/ and /contact-mobile/, all slashed. Pages
+# matches these rules exactly, so the slash-less rules alone returned 404 for
+# every one of those URLs. The earlier "verified 301" was tested without the
+# slash, which is not how the old URLs look. Probed on nlds.pages.dev 2026-09-12.
+# Unchanged pages (/about-us/, /packages/, /contact/, /privacy-policy/) need no
+# rule: Pages itself 308s the slashed form to the page.
+
+/home                       /                 301
+/home/                      /                 301
+/key-information            /free-resources   301
+/key-information/           /free-resources   301
+/frequently-asked-questions /faq              301
+/frequently-asked-questions/ /faq             301
+
+# The old site 301-redirected its homepage to /?scfm-mobile=1, courtesy of the
+# "Specific Content for Mobile" plugin. That plugin does not exist here, so the
+# query string is simply ignored and / serves the homepage directly.
+
+# The "Specific Content for Mobile" plugin published a second, parallel copy of
+# four pages at a -mobile URL. All four return 200 on the live site and Google has
+# indexed at least three of them: /about-us-mobile/ (66 impressions), /packages-mobile/
+# (30) and /contact-mobile/ (4) all appear in the Search Console export of
+# 2026-09-08. Without these rules they become 404s the day DNS moves, and the
+# search equity sitting on them is thrown away rather than folded into the real page.
+# Confirmed by request 2026-09-09 — /faq-mobile/, /key-information-mobile/ and
+# /privacy-policy-mobile/ do not exist, so they are not listed.
+/about-us-mobile            /about-us         301
+/about-us-mobile/           /about-us         301
+/packages-mobile            /packages         301
+/packages-mobile/           /packages         301
+/contact-mobile             /contact          301
+/contact-mobile/            /contact          301
+/home-mobile                /                 301
+/home-mobile/               /                 301
+
+# Common WordPress paths that no longer exist, sent somewhere useful rather
+# than to a dead end.
+/wp-content/*               /                 301
+/feed                       /                 301
+/feed/                      /                 301
+/index.php                  /                 301
+
+# --- Next.js static-export prefetch payloads -----------------------------
+#
+# There were rewrite rules here. They never worked, for two reasons found by
+# probing the deployed site:
+#
+#   1. Cloudflare Pages `_redirects` supports 301, 302, 303, 307 and 308 only.
+#      A status-200 rewrite is silently ignored, so the rules were inert.
+#   2. The target did not serve either. `output: "export"` writes the payload to
+#      out/<route>/__next.<route>/__PAGE__.txt, and Pages returns 404 for files
+#      inside a directory named `__next.<route>` — though files with dots sitting
+#      directly in the route directory serve fine.
+#
+# Fixed in scripts/flatten-rsc-payloads.mjs instead, which runs as `postbuild`
+# and copies each payload to the flat name next/link actually requests. No
+# redirect needed: the file now exists where it is asked for.

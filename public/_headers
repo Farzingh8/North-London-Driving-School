@@ -1,0 +1,111 @@
+# Cloudflare Pages response headers.
+#
+# The live WordPress site scores D on securityheaders.com: eight of nine headers
+# missing, only the browser-default Referrer-Policy present. This file is the fix.
+# It is copied verbatim into the build output and applied at the edge.
+
+# script-src names app.storyblok.com for the visual editor bridge.
+#
+# Apart from Cloudflare's analytics beacon (see below), that script is the only
+# third-party JavaScript this site can load, and a visitor never does. components/storyblok-bridge.ts injects it at runtime and
+# only when the page is inside an iframe AND the editor has marked the session:
+# the first page carries Storyblok's `_storyblok` parameter, which only its
+# editor appends, and later pages in the same frame remember it. Someone
+# arriving from search, a link or a bookmark is not in a frame, so the page
+# they get has no third-party script in it and still needs no cookie banner.
+#
+# The directive has to be static, so the origin is allowed for everyone even
+# though almost nobody can reach it. That is the cost of click-to-edit, and it
+# is a real if small one: an injection that got as far as running script could
+# now fetch from one more origin. Remove this and the editor still shows the
+# page; only the click-to-select goes.
+
+# X-Frame-Options is deliberately absent, and frame-ancestors names Storyblok.
+#
+# The visual editor loads the site in an iframe, and this file was blocking it
+# twice over: `X-Frame-Options: DENY` and `frame-ancestors 'none'`. Firefox
+# reports the first ("will not allow Firefox to display the page if another site
+# has embedded it"), so both had to go.
+#
+# X-Frame-Options could not simply be relaxed. It understands only DENY and
+# SAMEORIGIN, so there is no way to say "Storyblok's editor may frame this and
+# nothing else may". Clickjacking protection is now carried entirely by
+# `frame-ancestors`, which every current browser honours, which can name an
+# origin, and which securityheaders.com accepts in its place.
+#
+# The allowance is narrow on purpose: app.storyblok.com is a CMS behind a login,
+# not an origin an attacker can serve from. Nothing else may frame this site.
+
+# HSTS WITHOUT includeSubDomains OR preload. Deliberate; do not add them back.
+#
+# includeSubDomains would force HTTPS on every subdomain of the domain, and the
+# mail cluster stays on iPage: webmail.northlondondrivingschool.ca serves a
+# certificate for *.ipage.com, not for this domain (checked 2026-09-12). Today
+# that is a warning a browser lets you click through. Under HSTS a certificate
+# error cannot be bypassed at all, so once any browser had visited the new site
+# Ray could no longer open his own webmail in it. `preload` would bake that
+# into browsers for months. The website itself is fully protected by the plain
+# header; only subdomains the site does not own are left alone.
+# Same rule for Cloudflare's zone-level HSTS setting at cutover: leave
+# "Include subdomains" and "Preload" OFF there too.
+
+# connect-src names https://formspree.io. WITHOUT IT THE CONTACT FORM DOES NOT SEND.
+#
+# components/ContactFormEnhancer.tsx submits with fetch() so a visitor lands on
+# our own /message-sent page instead of Formspree's. fetch() is governed by
+# connect-src, not form-action, and this policy said 'self' only. So every
+# visitor with JavaScript pressed Send, the browser refused the request, and the
+# form reported a dropped connection while the enquiry went nowhere. Found
+# 2026-09-12 on nlds.pages.dev: "connect-src blocked https://formspree.io/".
+# Earlier tests passed because the local server does not apply this file.
+# form-action still names Formspree for the no-JavaScript fallback.
+#
+# Cloudflare Web Analytics is allowed here too (added 2026-09-12).
+#
+# The Pages project injects its beacon into every page at the edge: a script
+# from https://static.cloudflareinsights.com that reports to
+# https://cloudflareinsights.com. Without those two origins in script-src and
+# connect-src the beacon is blocked exactly as the form was, silently, and the
+# dashboard simply stays empty. It is cookieless and identifies no one, which is
+# why it needs no consent banner; the privacy policy says so by name.
+
+/*
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cross-Origin-Opener-Policy: same-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=(), xr-spatial-tracking=()
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self' https://app.storyblok.com; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://app.storyblok.com https://static.cloudflareinsights.com; connect-src 'self' https://formspree.io https://cloudflareinsights.com; form-action 'self' https://formspree.io; frame-src https://www.youtube-nocookie.com; manifest-src 'self'; upgrade-insecure-requests
+
+# The pages.dev copies are not for search. Restored 2026-09-13, after launch.
+#
+# These match only pages.dev hosts: the project address and preview builds such
+# as abc123.nlds1.pages.dev. northlondondrivingschool.ca never gets the header.
+# Run PageSpeed against the real domain, never pages.dev: Lighthouse scores this
+# header as "blocked from indexing" and SEO drops to about 65. That is what
+# happened before launch, when the rule was removed for a while.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+# Content-addressed. Safe to cache forever.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Notes on the two 'unsafe-inline' allowances, neither of which is decorative:
+#
+# style-src   Next inlines the critical style block for the font declarations.
+# script-src  The static export inlines its React flight payload as
+#             self.__next_f.push(...) on every page.
+#
+# Both can be replaced with sha256 hashes, computed per page after `next build`
+# and written into this file by a post-build script. That is a real hardening
+# step and it is worth doing, but it has to be verified against the built
+# output rather than guessed, so it stays a follow-up rather than a claim.
+#
+# There is no cookie banner and nothing to consent to: no cookies, no Meta Pixel,
+# no chat widget. The only third-party scripts are Cloudflare's cookieless
+# analytics beacon and, inside the editor only, Storyblok's bridge. Removing the
+# Pixel and JivoChat is what makes this CSP as short as it is.
