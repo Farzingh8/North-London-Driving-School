@@ -1,9 +1,9 @@
 /**
  * One Storyblok bridge for the whole page, loaded only inside the editor.
  *
- * There were two instances before this: StoryblokBridge created one to enable
- * click-to-select, PackageCardsLive created another to subscribe to keystrokes.
- * The bridge binds click handlers to every `data-blok-c` element when it starts,
+ * An earlier version created two instances, one for click-to-select and one to
+ * subscribe to keystrokes, from components that no longer exist. The bridge
+ * binds click handlers to every `data-blok-c` element when it starts,
  * so two of them bind twice over the same nodes, and which one wins a click is
  * not something to leave to chance. Everything now shares this single instance.
  */

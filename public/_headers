@@ -46,8 +46,8 @@
 # Ray could no longer open his own webmail in it. `preload` would bake that
 # into browsers for months. The website itself is fully protected by the plain
 # header; only subdomains the site does not own are left alone.
-# Same rule for Cloudflare's zone-level HSTS setting at cutover: leave
-# "Include subdomains" and "Preload" OFF there too.
+# Same rule for Cloudflare's zone-level HSTS setting: leave "Include
+# subdomains" and "Preload" OFF there too.
 
 # connect-src names https://formspree.io. WITHOUT IT THE CONTACT FORM DOES NOT SEND.
 #
@@ -56,7 +56,7 @@
 # connect-src, not form-action, and this policy said 'self' only. So every
 # visitor with JavaScript pressed Send, the browser refused the request, and the
 # form reported a dropped connection while the enquiry went nowhere. Found
-# 2026-09-12 on nlds.pages.dev: "connect-src blocked https://formspree.io/".
+# 2026-09-12 on the staging pages.dev site: "connect-src blocked https://formspree.io/".
 # Earlier tests passed because the local server does not apply this file.
 # form-action still names Formspree for the no-JavaScript fallback.
 #
@@ -80,7 +80,7 @@
 # The pages.dev copies are not for search. Restored 2026-09-13, after launch.
 #
 # These match only pages.dev hosts: the project address and preview builds such
-# as abc123.nlds1.pages.dev. northlondondrivingschool.ca never gets the header.
+# as abc123.<project>.pages.dev. northlondondrivingschool.ca never gets the header.
 # Run PageSpeed against the real domain, never pages.dev: Lighthouse scores this
 # header as "blocked from indexing" and SEO drops to about 65. That is what
 # happened before launch, when the rule was removed for a while.

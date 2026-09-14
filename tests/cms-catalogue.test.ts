@@ -97,9 +97,9 @@ describe("getCatalogue", () => {
     await expect(buildWith({}, 401)).rejects.toThrow(/401/);
   });
 
-  // Known gap: the check is "one of the six verified links",
-  // not "this package's link", so Diamond's link on Bronze's card would pass.
-  it.todo("rejects a verified Stripe link attached to the wrong package");
+  // Accepted limitation: the check is "one of the six verified links", not
+  // "this package's link", so Diamond's link on Bronze's card would pass. The
+  // owner does not edit the Stripe fields, so this is not enforced.
 });
 
 describe("toPublicPackage", () => {

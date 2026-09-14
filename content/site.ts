@@ -111,11 +111,10 @@ export const site = {
    * the form off cleanly: the contact page falls back to the phone, text and
    * email routes rather than showing a form that posts nowhere.
    *
-   * NOT VERIFIED END TO END. Everything on this side is right — the form posts
-   * to this URL, the CSP allows formspree.io as a form-action, and the honeypot
-   * and required fields are in place — but whether this ID is live and routes
-   * to the intended inbox can only be proved by a real submission, which sends
-   * a real email. Send one test message and confirm it arrives before launch.
+   * Verified end to end on 2026-09-12: a real test enquiry arrived in the
+   * school's inbox. The CSP must allow formspree.io in both connect-src (for
+   * the fetch in ContactFormEnhancer) and form-action (for the no-JavaScript
+   * post); tests/deploy-config.test.ts checks both.
    */
   formspree: "https://formspree.io/f/mjyvpldw",
 

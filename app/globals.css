@@ -4,10 +4,13 @@
 
    The design grammar is a printed course prospectus: left-aligned, ruled,
    rectangular, set in full-width bands. Facts are labelled rows, not tiles.
-   There are no icons and no motion anywhere. Gradients and shadows appear in
-   exactly one place — the four package cards, where they carry the tier
-   hierarchy — and nowhere else. Every colour pairing below has been measured
-   against WCAG 2.1.
+   The only icons are the WhatsApp and Instagram marks. Motion is limited to a
+   few scroll effects (the hero car, the page background, the review rail, the
+   hide-on-scroll header) and small hover states, and the reduced-motion block
+   below switches all of it off. Gradients and shadows are kept for the four
+   package cards, where they carry the tier hierarchy, and a few quiet
+   surfaces such as the menu panel. Every colour pairing below has been
+   measured against WCAG 2.1.
    ========================================================================== */
 
 :root {
@@ -591,8 +594,9 @@ cite { font-style: normal; }
    deliberately flat; Gold and Diamond get a specular highlight, an inner bevel
    and a soft drop shadow, so the hierarchy is visible before a price is read.
 
-   All CSS gradients, so this costs no image bytes and nothing to download, and
-   there is no motion anywhere in it. Body text sits at 14.7:1 or better on
+   All CSS gradients, so this costs no image bytes and nothing to download. The
+   only motion is the small lift on hover further down, which reduced motion
+   turns off. Body text sits at 14.7:1 or better on
    every wash; the worst header pairing of the sixteen is 5.13:1.
    ---------------------------------------------------------------------- */
 
@@ -957,52 +961,10 @@ a.review:hover { border-color: var(--green); background: var(--white); }
 #offer-6:checked ~ [data-offer="6"],
 #offer-7:checked ~ [data-offer="7"] { display: block; }
 
-/* --- editorial markers, removed before launch --------------------------- */
-
-.flagbox {
-  background: #fdf6e3;
-  border: 1px solid var(--amber);
-  border-left: 6px solid var(--amber);
-  border-radius: var(--radius);
-  padding: 0.9rem 1.1rem;
-  font-size: 1rem;
-  color: #4a3a05;
-  margin: 0 0 1.5rem;
-}
-.flagbox b {
-  display: block;
-  font-family: var(--font-heading), system-ui, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  font-size: 0.875rem;
-  margin-bottom: 0.2rem;
-}
-.flagbox p { margin: 0; }
-
-.photoslot {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  text-align: center;
-  gap: 0.3rem;
-  min-height: 18rem;
-  padding: 1.25rem;
-  border: 2px dashed var(--border);
-  border-radius: var(--radius);
-  background: repeating-linear-gradient(
-    45deg, var(--pale), var(--pale) 12px, #dde6dc 12px, #dde6dc 24px
-  );
-  color: #3c4a40;
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-}
-.photoslot span { font-weight: 400; color: var(--slate); max-width: 30ch; }
-
 /* --- print ------------------------------------------------------------- */
 
 @media print {
-  .utility, .navmob, .nav, .contactbar, .photoslot, .flagbox { display: none !important; }
+  .utility, .navmob, .nav, .contactbar { display: none !important; }
   body { background: #fff; color: #000; font-size: 11pt; padding-bottom: 0; }
   .band--green, .band--ink { background: #fff !important; color: #000 !important; }
   .band--green h1, .band--green h2, .band--ink h2,
@@ -1754,7 +1716,7 @@ a.review:hover { border-color: var(--green); background: var(--white); }
 /* A still image and a link out, never an embed: a Maps iframe sets cookies and
    would drag a consent banner onto a site built to avoid one. */
 .map { margin: 0; }
-.map img, .map .photoslot {
+.map img {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius);

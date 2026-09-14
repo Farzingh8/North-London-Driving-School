@@ -4,13 +4,13 @@
  * These interfaces are deliberately shaped like Storyblok bloks (`_uid` +
  * `component` discriminator, flat scalar fields, arrays of strings rather than
  * rich text where rich text is not needed). Nothing here imports a Storyblok
- * SDK. When the space is created, `content/loader.ts` is the only file that
- * changes: it stops importing these modules and starts fetching the same
- * shapes from the Content Delivery API.
+ * SDK. Packages and lessons already come from Storyblok through
+ * `content/cms/packages.ts`, which maps the API response into `PackageBlok`.
+ * The other content types are still local modules, and the same shape means
+ * any of them could move into the CMS with a mapper of its own.
  *
- * `verified` and `note` are internal editorial flags. They never render as
- * page copy; they drive the amber "unconfirmed" markers so nothing unverified
- * reaches a customer by accident.
+ * `verified` and `note` are internal bookkeeping fields. They never render as
+ * page copy and never reach the browser: see `PublicPackage` below.
  */
 
 export interface Blok {
