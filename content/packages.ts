@@ -114,7 +114,7 @@ export const packages: PackageBlok[] = [
       "MTO Beginner Driver Education certificate on completion",
     ],
     stripeUrl: "https://buy.stripe.com/bIY8zx7Q0eTz6dy7sH",
-    badge: "Most in-car time",
+    badge: "Best value",
     featured: true,
     verified: false,
     note: "16 hours inclusive of the 2-hour test-day lesson, per Ray. Confirm that is how the hours are counted and sold.",
