@@ -8,7 +8,7 @@ const facts = computeFacts(packages.map(toPublicPackage), true);
 
 describe("fill", () => {
   it("replaces tokens with the catalogue's values", () => {
-    expect(fill("From {priceFrom} to {priceTo}", facts)).toBe("From 599.99 to 999.99");
+    expect(fill("From {priceFrom} to {priceTo}", facts)).toBe("From 599.99 to 909.99");
   });
 
   it("fails the build on a misspelled token instead of printing braces", () => {

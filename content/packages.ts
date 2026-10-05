@@ -74,7 +74,7 @@ export const packages: PackageBlok[] = [
     slug: "gold",
     name: "Gold",
     tier: "gold",
-    price: "799.99",
+    price: "759.99",
     taxNote: "plus HST",
     inCarHours: 12,
     onlineHours: 30,
@@ -97,7 +97,7 @@ export const packages: PackageBlok[] = [
     slug: "diamond",
     name: "Diamond",
     tier: "diamond",
-    price: "999.99",
+    price: "909.99",
     taxNote: "plus HST",
     /** 16 hours in total, inclusive of the 2-hour lesson on test day. The
      *  test-day lesson is not listed separately anywhere, because doing so

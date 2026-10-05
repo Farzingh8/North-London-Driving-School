@@ -11,7 +11,7 @@ describe("computeFacts", () => {
   it("derives every fact the site quotes from the catalogue", () => {
     const facts = computeFacts(catalogue, true);
     expect(facts.priceFrom).toBe("599.99");
-    expect(facts.priceTo).toBe("999.99");
+    expect(facts.priceTo).toBe("909.99");
     expect(facts.inCarMin).toBe(10);
     expect(facts.inCarMax).toBe(16);
     expect(facts.onlineHours).toBe(30);
