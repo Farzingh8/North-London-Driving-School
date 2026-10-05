@@ -97,7 +97,7 @@ export const packages: PackageBlok[] = [
     slug: "diamond",
     name: "Diamond",
     tier: "diamond",
-    price: "909.99",
+    price: "899.99",
     taxNote: "plus HST",
     /** 16 hours in total, inclusive of the 2-hour lesson on test day. The
      *  test-day lesson is not listed separately anywhere, because doing so
